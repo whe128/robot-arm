@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { moveToOrigin, moveWave } from "@/animation/animation";
 
 const Panel = ({ title, children }) => {
   return (
@@ -11,7 +12,7 @@ const Panel = ({ title, children }) => {
   );
 }
 
-const JointSlider = ({ label, value, min, max, onChange }) => {
+const JointSlider = ({ label, value, min, max, onChange, disabled }) => {
   return (
     <div className="mb-2.5 last:mb-0">
       <div className="flex justify-between text-xs mb-1">
@@ -23,10 +24,14 @@ const JointSlider = ({ label, value, min, max, onChange }) => {
         min={min} max={max} step={0.01}
         value={value}
         onChange={(e) => {
+          if (disabled) return;
           onChange(e.target.value)
         }
       }
-        className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+      className={`
+        w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500
+        ${disabled ? "pointer-events-none" : ""}
+      `}
       />
     </div>
   );
@@ -47,17 +52,19 @@ const NumInput = ({ label, value, onChange }) => {
   );
 };
 
-const AnimBtn = ({ label, active, stop, onClick }) => {
+const AnimBtn = ({ label, active, onClick, stop = false, disabled = false,  }) => {
   return (
     <button
-      onClick={onClick}
+      disabled={disabled}
+      onClick={disabled ? undefined : onClick}
+
       className={`
         w-full text-left py-1.5 px-2.5 text-xs rounded-md border transition-colors duration-150
         ${active
           ? "bg-slate-800 border-slate-600 text-slate-100"
-          : "bg-transparent border-slate-800 text-slate-300 hover:bg-slate-800/50 hover:border-slate-700"
+          : `"bg-transparent border-slate-800 text-slate-300
+          ${disabled? "": "hover:bg-slate-800/50 hover:border-slate-700"}`
         }
-        ${stop && !active ? "text-slate-400" : ""}
       `}
     >
       <span className="inline-block w-3 mr-1 text-[10px]">
@@ -75,14 +82,14 @@ const RobotControl = ({
   joints,
   onJointChangeSingle,
   onJointChangeWhole,
-  onTargetChange,
-  onAnimation,
   endEffector = { x: 0, y: 0, z: 0, roll: 0, pitch: 0, yaw: 0 }
 }) => {
 
   // degree state for sliders
 
   const [activeAnim, setActiveAnim] = useState(null);
+  const isAnimating = activeAnim !== null;
+
   const [target, setTarget] = useState({ x: 0.3, y: 0, z: 0.3 });
 
 
@@ -94,46 +101,22 @@ const RobotControl = ({
   const handleTargetChange = (axis, value) => {
     const next = { ...target, [axis]: value };
     setTarget(next);
-    onTargetChange?.(next);
   };
 
-  const handleMoveToTarget = () => {
-    setActiveAnim(next);
+
+  const onStop = () => setActiveAnim(null);
+
+  const animationHandleMap = {
+    origin: () => moveToOrigin( joints, onJointChangeWhole, onStop),
+    wave: () => moveWave( joints, onJointChangeWhole),
   };
 
-  const handleMoveToOrigin = () => {
-    const duration = 3500;    // 3.5 second
-    const startTime = performance.now();
-    const startAngles =  Array.from(joints);      // current joint angles in rad
-
-    const tick = (now) => {
-      // consumed time
-      const elapsed = now - startTime;
-      // time ratio [0, 1]
-      const t = Math.min(elapsed / duration, 1);
-      // ease-out cubic
-      const ease = 1 - Math.pow(1 - t, 3);
-
-      // interpolate to 0 rad
-      const newJoints = startAngles.map((startRad) => startRad * (1 - ease));
-      onJointChangeWhole?.(newJoints);
-
-      if (t < 1) {
-        requestAnimationFrame(tick);
-      } else {
-        // stop
-
-      }
-    };
-
-    requestAnimationFrame(tick);
-  }
-
-  const handleAnim = useCallback((mode) => {
+  const handleAnim = (mode) => {
     const next = activeAnim === mode ? null : mode;
     setActiveAnim(next);
-    onAnimation?.(next);
-  }, [activeAnim, onAnimation]);
+
+    animationHandleMap[next]?.();
+  };
 
   const anims = [
     { id: "target",   label: "Move to Target" },
@@ -214,6 +197,7 @@ const RobotControl = ({
               value={radToDeg(joints[index])}
               min={min}
               max={max}
+              disabled={isAnimating}
               onChange={(v) => handleJ(index, v)}
             />
           ))
@@ -243,13 +227,14 @@ const RobotControl = ({
               label={label}
               active={activeAnim === id}
               onClick={() => handleAnim(id)}
+              disabled={isAnimating}
             />
           ))}
           <AnimBtn
             label="Stop"
-            stop
             active={!activeAnim}
             onClick={() => handleAnim(null)}
+            stop = {true}
           />
         </div>
       </Panel>
