@@ -1,0 +1,110 @@
+<robot name="robot_arm">
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="base.obj"/>
+      </geometry>
+      <origin rpy = "-1.5708 0 0" xyz = "0 0 0"/>
+    </visual>
+  </link>
+
+  <link name="link1">
+    <visual>
+      <geometry>
+        <mesh filename="arm_1.obj"/>
+      </geometry>
+      <origin rpy = "-1.5708 0 0" xyz = "0 0 0"/>
+    </visual>
+  </link>
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <origin xyz="0 0.03 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.1416" upper="3.1416"/>
+  </joint>
+
+  <link name="link2">
+    <visual>
+      <geometry>
+        <mesh filename="arm_2.obj"/>
+      </geometry>
+      <origin rpy = "1.5708 0 1.5708" xyz = "0 0.125 0"/>
+    </visual>
+  </link>
+  <joint name="joint2" type="revolute">
+    <parent link="link1"/>
+    <child link="link2"/>
+    <origin xyz="0 0.041 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-1.57" upper="1.57"/>
+  </joint>
+
+  <link name="link3">
+    <visual>
+      <geometry>
+        <mesh filename="arm_3.obj"/>
+      </geometry>
+      <origin rpy = "1.5708 0 -1.5708" xyz = "0 0.125 0"/>
+    </visual>
+  </link>
+  <joint name="joint3" type="revolute">
+    <parent link="link2"/>
+    <child link="link3"/>
+    <origin xyz="0 0.25 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-2.007" upper="2.007"/>
+  </joint>
+
+  <link name="link4">
+    <visual>
+      <geometry>
+        <mesh filename="arm_4.obj"/>
+      </geometry>
+      <origin rpy = "0 -1.5708 0" xyz = "0 0 0"/>
+    </visual>
+  </link>
+  <joint name="joint4" type="revolute">
+    <parent link="link3"/>
+    <child link="link4"/>
+    <origin xyz="0 0.1 0.019" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416"/>
+  </joint>
+
+
+
+  <link name="link5">
+    <visual>
+      <geometry>
+        <mesh filename="arm_5.obj"/>
+      </geometry>
+      <origin rpy = "0 1.5708 0" xyz = "0 0 0.125"/>
+    </visual>
+  </link>
+  <joint name="joint5" type="revolute">
+    <parent link="link4"/>
+    <child link="link5"/>
+    <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-2.007" upper="2.007"/>
+  </joint>
+
+  <link name="link6">
+    <visual>
+      <geometry>
+        <mesh filename="arm_6.obj"/>
+      </geometry>
+      <origin rpy = "0 -1.5708 -1.5708" xyz = "0 0 0.028"/>
+    </visual>
+  </link>
+  <joint name="joint6" type="revolute">
+    <parent link="link5"/>
+    <child link="link6"/>
+    <origin xyz="0 0 0.125" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14160" upper="3.14160"/>
+  </joint>
+
+</robot>
