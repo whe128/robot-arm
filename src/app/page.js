@@ -2,11 +2,13 @@
 
 import RobotViewer from "@/components/RobotViewer";
 import RobotControl from "@/components/RobotControl";
+import { endEffectorPose } from "@/kinematics/forwadKinematics";
+
 import { useState } from "react";
 
 const Home = () => {
   // rad
-  const [joints, setJoints] = useState([0, -0.31, 0.4, -0.78, -0.78, 0]); // j1 ~ j6
+  const [joints, setJoints] = useState(Array(6).fill(0)); // j1 ~ j6
 
   // rad
   const handleJointChangeSingle = (joint_index, value) => {
@@ -21,13 +23,6 @@ const Home = () => {
     setJoints(joints);
   };
 
-  const handleJointReset = () => {
-    setJoints([0, -0.31, 0.4, -0.78, -0.78, 0]);
-  };
-
-  const handleJointClear = () => {
-    setJoints(Array(6).fill(0));
-  };
 
   return (
     <div className="flex flex-col h-screen bg-[#0d1117] text-[#e6edf3] font-sans">
@@ -42,8 +37,8 @@ const Home = () => {
           <RobotControl
             joints={joints}
             onJointChangeSingle={handleJointChangeSingle}
-            onJointReset={handleJointReset}
-            onJointClear={handleJointClear}
+            onJointChangeWhole={handleJointChangeWhole}
+            endEffector={endEffectorPose(joints)}
           />
         </div>
       </div>

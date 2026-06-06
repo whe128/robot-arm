@@ -32,6 +32,21 @@ const JointSlider = ({ label, value, min, max, onChange }) => {
   );
 }
 
+const NumInput = ({ label, value, onChange }) => {
+  return (
+    <div className="flex justify-between items-center text-xs mb-1.5 last:mb-0">
+      <span className="text-slate-400 w-6">{label}</span>
+      <input
+        type="number"
+        step={0.001}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+        className="w-28 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 font-mono text-slate-100 text-right focus:outline-none focus:border-blue-500"
+      />
+    </div>
+  );
+};
+
 const AnimBtn = ({ label, active, stop, onClick }) => {
   return (
     <button
@@ -59,21 +74,60 @@ const radToDeg = rad => rad * (180 / Math.PI);
 const RobotControl = ({
   joints,
   onJointChangeSingle,
-  onJointReset,
-  onJointClear,
+  onJointChangeWhole,
+  onTargetChange,
   onAnimation,
-  endEffector = { x: 0, y: 0, z: 0 }
+  endEffector = { x: 0, y: 0, z: 0, roll: 0, pitch: 0, yaw: 0 }
 }) => {
 
   // degree state for sliders
 
   const [activeAnim, setActiveAnim] = useState(null);
+  const [target, setTarget] = useState({ x: 0.3, y: 0, z: 0.3 });
 
 
   const handleJ = (index, v) => {
     const deg = parseFloat(v);
     onJointChangeSingle?.(index, degToRad(deg));
   };
+
+  const handleTargetChange = (axis, value) => {
+    const next = { ...target, [axis]: value };
+    setTarget(next);
+    onTargetChange?.(next);
+  };
+
+  const handleMoveToTarget = () => {
+    setActiveAnim(next);
+  };
+
+  const handleMoveToOrigin = () => {
+    const duration = 3500;    // 3.5 second
+    const startTime = performance.now();
+    const startAngles =  Array.from(joints);      // current joint angles in rad
+
+    const tick = (now) => {
+      // consumed time
+      const elapsed = now - startTime;
+      // time ratio [0, 1]
+      const t = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const ease = 1 - Math.pow(1 - t, 3);
+
+      // interpolate to 0 rad
+      const newJoints = startAngles.map((startRad) => startRad * (1 - ease));
+      onJointChangeWhole?.(newJoints);
+
+      if (t < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        // stop
+
+      }
+    };
+
+    requestAnimationFrame(tick);
+  }
 
   const handleAnim = useCallback((mode) => {
     const next = activeAnim === mode ? null : mode;
@@ -82,24 +136,22 @@ const RobotControl = ({
   }, [activeAnim, onAnimation]);
 
   const anims = [
-    { id: "wave",  label: "Wave" },
-    { id: "sweep", label: "Sweep" },
-    { id: "dance", label: "Dance" },
+    { id: "target",   label: "Move to Target" },
+    { id: "origin",   label: "Move to Origin" },
+    { id: "wave",     label: "Wave" },
+    { id: "sweep",    label: "Sweep" },
+    { id: "dance",    label: "Dance" },
   ];
 
   const jointsInfo = [
     { label: "Joint 1 — Base yaw",    min: -180,  max: 180, index: 0},
     { label: "Joint 2 — Arm pitch",   min: -90,   max: 90,  index: 1},
     { label: "Joint 3 — Arm pitch",   min: -115,  max: 115, index: 2},
-    { label: "Joint 4 — Elbow roll", min: -180,  max: 180, index: 3},
+    { label: "Joint 4 — Elbow roll",  min: -180,  max: 180, index: 3},
     { label: "Joint 5 — Wrist pitch", min: -115,  max: 115, index: 4},
     { label: "Joint 6 — Wrist roll",  min: -180,  max: 180, index: 5},
   ];
 
-  const buttonInfo = [
-    { label: "Reset Joints", onClick: onJointReset },
-    { label: "Clear Joints", onClick: onJointClear },
-  ];
 
   return (
     <div className="flex flex-col gap-3 w-[280px]">
@@ -108,31 +160,52 @@ const RobotControl = ({
       <Panel title="END POINT">
         <div className="flex gap-18">
           <div className="flex flex-col gap-1 w-1/2">
-            {["X", "Y", "Z"].map((axis) => (
+            {["X", "Y", "Z"].map((axis) => {
+              const axisMap = {
+                X: "z",
+                Y: "x",
+                Z: "y",
+              };
+              const key = axisMap[axis];
+
+              return (
               <div key={axis} className="flex justify-between text-xs">
                 <span className="text-slate-400">{axis}</span>
                 <span className="font-mono text-slate-100">
-                  {(endEffector[axis] ?? 0).toFixed(3)}
+                  {(endEffector[key] ?? 0).toFixed(3)}
                 </span>
               </div>
-            ))}
+            );
+            })}
           </div>
 
           <div className="flex flex-col gap-1 w-1/2">
-            {["Roll", "Pitch", "Yaw"].map((axis) => (
+            {["Roll", "Pitch", "Yaw"].map((axis) => {
+              const axisMap = {
+                Roll: "yaw",
+                Pitch: "roll",
+                Yaw: "pitch"
+              };
+              const key = axisMap[axis];
+
+              const deg = radToDeg(endEffector[key] ?? 0);
+
+              return (
               <div key={axis} className="flex justify-between text-xs">
                 <span className="text-slate-400">{axis}</span>
                 <span className="font-mono text-slate-100">
-                  {(endEffector[axis] ?? 0).toFixed(3)}
+                  {(deg ?? 0).toFixed(2)}°
                 </span>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       </Panel>
 
+
       {/* Joint Control */}
-      <Panel title="JOINT">
+      <Panel>
         {
           jointsInfo.map(({ label, min, max, index }) => (
             <JointSlider
@@ -149,6 +222,20 @@ const RobotControl = ({
 
       {/* Animation */}
       <Panel title="CONTROL">
+        <div className="flex gap-2 mb-2">
+          {["X", "Y", "Z"].map((axis) => (
+            <div key={axis} className="flex items-center gap-1 flex-1">
+              <span className="text-slate-400 text-xs">{axis}</span>
+              <input
+                type="number"
+                step={0.001}
+                value={target[axis.toLowerCase()]}
+                onChange={(e) => handleTargetChange(axis.toLowerCase(), parseFloat(e.target.value) || 0)}
+                className="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-slate-100 text-right text-xs focus:outline-none focus:border-blue-500 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none appearance-none"              />
+            </div>
+          ))}
+        </div>
+
         <div className="flex flex-col gap-1.5">
           {anims.map(({ id, label }) => (
             <AnimBtn
@@ -160,7 +247,7 @@ const RobotControl = ({
           ))}
           <AnimBtn
             label="Stop"
-            
+            stop
             active={!activeAnim}
             onClick={() => handleAnim(null)}
           />
