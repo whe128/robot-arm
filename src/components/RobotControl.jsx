@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { moveToOrigin, moveWave } from "@/animation/animation";
+import { useState, useRef } from "react";
+import { moveToOrigin, moveWave, moveSweep, moveDance } from "@/animation/animation";
 
 const Panel = ({ title, children }) => {
   return (
@@ -52,18 +52,16 @@ const NumInput = ({ label, value, onChange }) => {
   );
 };
 
-const AnimBtn = ({ label, active, onClick, stop = false, disabled = false,  }) => {
+const AnimBtn = ({ label, active, onClick, stop = false }) => {
   return (
     <button
-      disabled={disabled}
-      onClick={disabled ? undefined : onClick}
+      onClick={onClick}
 
       className={`
         w-full text-left py-1.5 px-2.5 text-xs rounded-md border transition-colors duration-150
         ${active
           ? "bg-slate-800 border-slate-600 text-slate-100"
-          : `"bg-transparent border-slate-800 text-slate-300
-          ${disabled? "": "hover:bg-slate-800/50 hover:border-slate-700"}`
+          : "bg-transparent border-slate-800 text-slate-300 hover:bg-slate-800/50 hover:border-slate-700"
         }
       `}
     >
@@ -106,16 +104,26 @@ const RobotControl = ({
 
   const onStop = () => setActiveAnim(null);
 
-  const animationHandleMap = {
-    origin: () => moveToOrigin( joints, onJointChangeWhole, onStop),
-    wave: () => moveWave( joints, onJointChangeWhole),
-  };
+  const animationHandleMap = useRef({
+    origin: moveToOrigin(onJointChangeWhole, onStop),
+    wave: moveWave(onJointChangeWhole),
+    sweep: moveSweep(onJointChangeWhole),
+    dance: moveDance(onJointChangeWhole),
+  }).current;
 
   const handleAnim = (mode) => {
-    const next = activeAnim === mode ? null : mode;
+    // if same mode clicked, stop. else start new mode
+    const next = mode === activeAnim ? null : mode;
+
+    // stop current
+    animationHandleMap[activeAnim]?.stop();
+
+    // set new active mode
     setActiveAnim(next);
 
-    animationHandleMap[next]?.();
+    // start new mode
+    animationHandleMap[next]?.start(joints);
+
   };
 
   const anims = [
@@ -227,7 +235,6 @@ const RobotControl = ({
               label={label}
               active={activeAnim === id}
               onClick={() => handleAnim(id)}
-              disabled={isAnimating}
             />
           ))}
           <AnimBtn
