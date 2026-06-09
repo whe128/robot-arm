@@ -269,7 +269,7 @@ const moveSequence = (onUpdate, onStop, duration = 1000) => {
 
     // the ratio of move progress
     const t = Math.min((now - startTime) / duration, 1);
-    const ease = 1 - Math.pow(1 - t, 2);
+    const ease = 1 - Math.pow(1 - t, 1);
 
     const targetPose = sequenceList[currentIndex];
     const targetQuat = getQuaternionFromEular({
