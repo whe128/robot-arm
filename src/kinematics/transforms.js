@@ -110,9 +110,30 @@ const getEulerZYX = (T) => {
     const r10 = T[4], r11 = T[5], r12 = T[6];
     const r20 = T[8], r21 = T[9], r22 = T[10];
 
-    const yaw = Math.atan2(r10, r00);
-    const pitch = Math.atan2(-r20, Math.sqrt(r21 * r21 + r22 * r22));
-    const roll = Math.atan2(r21, r22);
+
+    const SINGULAR = 1e-6;
+    let yaw, pitch, roll;
+
+    const sinPitch = -r12;
+
+    if (Math.abs(sinPitch) >= 1 - SINGULAR) {
+        // Gimbal lock: pitch = ±90°
+        roll = 0; // can set roll to 0
+
+        if (sinPitch > 0) {
+            // pitch = +90°
+            yaw = Math.atan2(r02, r22);
+            pitch = Math.PI / 2;
+        } else {
+            // pitch = -90°
+            yaw = Math.atan2(-r02, -r22);
+            pitch = -Math.PI / 2;
+        }
+    } else {
+        yaw   = Math.atan2(r02, r22);
+        pitch = Math.atan2(-r12, Math.sqrt(r02 * r02 + r22 * r22));
+        roll  = Math.atan2(r10, r11);
+    }
 
     return { yaw, pitch, roll };
 }
@@ -123,41 +144,106 @@ const getPose = (T) => {
     return { ...position, ...orientation };
 }
 
-const getQuaternion = (T) => {
-    const r00=T[0], r01=T[1], r02=T[2];
-    const r10=T[4], r11=T[5], r12=T[6];
-    const r20=T[8], r21=T[9], r22=T[10];
+const getQuaternionFromEular = ({roll, pitch, yaw}) => {
+    // yaw is the Y axis
+    // pitch is the X axis
+    // roll is the Z axis
+    // three.js uses the order of rotation as YXZ, which is equivalent to ZYX in our case
 
-    const trace = r00 + r11 + r22;
-    let w, x, y, z;
+    const cy = Math.cos(yaw * 0.5);
+    const sy = Math.sin(yaw * 0.5);
 
-    if (trace > 0) {
-        const s = 0.5 / Math.sqrt(trace + 1);
-        w = 0.25 / s;
-        x = (r21 - r12) * s;
-        y = (r02 - r20) * s;
-        z = (r10 - r01) * s;
-    } else if (r00 > r11 && r00 > r22) {
-        const s = 2 * Math.sqrt(1 + r00 - r11 - r22);
-        w = (r21 - r12) / s;
-        x = 0.25 * s;
-        y = (r01 + r10) / s;
-        z = (r02 + r20) / s;
-    } else if (r11 > r22) {
-        const s = 2 * Math.sqrt(1 + r11 - r00 - r22);
-        w = (r02 - r20) / s;
-        x = (r01 + r10) / s;
-        y = 0.25 * s;
-        z = (r21 + r12) / s;
-    } else {
-        const s = 2 * Math.sqrt(1 + r22 - r00 - r11);
-        w = (r10 - r01) / s;
-        x = (r02 + r20) / s;
-        y = (r21 + r12) / s;
-        z = 0.25 * s;
-    }
-    return { w, x, y, z };
+    const cp = Math.cos(pitch * 0.5);
+    const sp = Math.sin(pitch * 0.5);
+
+    const cr = Math.cos(roll * 0.5);
+    const sr = Math.sin(roll * 0.5);
+
+    return {
+        w: cy * cp * cr - sy * sp * sr,
+        x: cy * sp * cr + sy * cp * sr,
+        y: sy * cp * cr - cy * sp * sr,
+        z: cy * cp * sr + sy * sp * cr,
+    };
 }
+
+const quaternionSlerp = (a, b, t) => {
+    let cosHalfTheta = a.w * b.w + a.x * b.x + a.y * b.y + a.z * b.z;
+
+    if (cosHalfTheta < 0) {
+        // reverse the second quaternion to take the shorter path
+        b = { w: -b.w, x: -b.x, y: -b.y, z: -b.z };
+        cosHalfTheta = -cosHalfTheta;
+    }
+
+    if (cosHalfTheta > 0.9995) {
+        // quaternions are very close, use linear interpolation
+        return {
+            w: a.w + t * (b.w - a.w),
+            x: a.x + t * (b.x - a.x),
+            y: a.y + t * (b.y - a.y),
+            z: a.z + t * (b.z - a.z),
+        };
+    }
+
+    const theta0 = Math.acos(cosHalfTheta);
+    const theta = theta0 * t;
+    const sinT0 = Math.sin(theta0);
+
+    const s0 = Math.cos(theta) - cosHalfTheta * Math.sin(theta) / sinT0;
+    const s1 = Math.sin(theta) / sinT0;
+
+    return {
+        w: s0 * a.w + s1 * b.w,
+        x: s0 * a.x + s1 * b.x,
+        y: s0 * a.y + s1 * b.y,
+        z: s0 * a.z + s1 * b.z,
+    };
+}
+
+// get quaternion from rotation matrix
+const matrixToQuat = (T) => {
+  const m00=T[0],  m01=T[1],  m02=T[2];
+  const m10=T[4],  m11=T[5],  m12=T[6];
+  const m20=T[8],  m21=T[9],  m22=T[10];
+
+  const trace = m00 + m11 + m22;
+
+  if (trace > 0) {
+    const s = 0.5 / Math.sqrt(trace + 1);
+    return {
+      w: 0.25 / s,
+      x: (m21 - m12) * s,
+      y: (m02 - m20) * s,
+      z: (m10 - m01) * s,
+    };
+  } else if (m00 > m11 && m00 > m22) {
+    const s = 2 * Math.sqrt(1 + m00 - m11 - m22);
+    return {
+      w: (m21 - m12) / s,
+      x: 0.25 * s,
+      y: (m01 + m10) / s,
+      z: (m02 + m20) / s,
+    };
+  } else if (m11 > m22) {
+    const s = 2 * Math.sqrt(1 + m11 - m00 - m22);
+    return {
+      w: (m02 - m20) / s,
+      x: (m01 + m10) / s,
+      y: 0.25 * s,
+      z: (m12 + m21) / s,
+    };
+  } else {
+    const s = 2 * Math.sqrt(1 + m22 - m00 - m11);
+    return {
+      w: (m10 - m01) / s,
+      x: (m02 + m20) / s,
+      y: (m12 + m21) / s,
+      z: 0.25 * s,
+    };
+  }
+};
+
 
 export {
     identity,
@@ -170,5 +256,9 @@ export {
     multiplyChain,
     getPosition,
     getEulerZYX,
-    getPose
+    getPose,
+    getQuaternionFromEular,
+    quaternionSlerp,
+    matrixToQuat,
+
 }

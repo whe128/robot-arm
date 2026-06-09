@@ -2,7 +2,6 @@
 
 import RobotViewer from "@/components/RobotViewer";
 import RobotControl from "@/components/RobotControl";
-import { endEffectorPose } from "@/kinematics/forwadKinematics";
 
 import { useState } from "react";
 
@@ -38,7 +37,6 @@ const Home = () => {
             joints={joints}
             onJointChangeSingle={handleJointChangeSingle}
             onJointChangeWhole={handleJointChangeWhole}
-            endEffector={endEffectorPose(joints)}
           />
         </div>
       </div>
