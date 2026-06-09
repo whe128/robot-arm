@@ -90,8 +90,7 @@ const RobotControl = ({
   };
 
   const handleTargetChange = (axis, value) => {
-    const rad = degToRad(value);
-    const next = { ...target, [axis]: rad };
+    const next = { ...target, [axis]: value };
     setTarget(next);
   };
 
@@ -99,7 +98,7 @@ const RobotControl = ({
   const onStop = () => setActiveAnim(null);
 
   const animationHandleMap = useRef({
-    target: moveToTarget(target, onJointChangeWhole, onStop),
+    target: moveToTarget(onJointChangeWhole, onStop),
     origin: moveToOrigin(onJointChangeWhole, onStop),
     wave: moveWave(onJointChangeWhole),
     sweep: moveSweep(onJointChangeWhole),
@@ -117,6 +116,10 @@ const RobotControl = ({
     setActiveAnim(next);
 
     // start new mode
+    if (next === "target"){
+      animationHandleMap[next]?.start(joints, target);
+      return;
+    }
     animationHandleMap[next]?.start(joints);
 
   };
@@ -215,7 +218,6 @@ const RobotControl = ({
                   <span className="text-slate-400 text-xs">{axis}</span>
                   <input
                     type="number"
-                    step={0.001}
                     value={target[adjustAxis]}
                     onChange={(e) => handleTargetChange(adjustAxis, parseFloat(e.target.value) || 0)}
                     className="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-slate-100 text-right text-xs focus:outline-none focus:border-blue-500 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none appearance-none"/>
@@ -232,12 +234,10 @@ const RobotControl = ({
                 <span className="w-13 text-slate-400  text-xs">{axis}</span>
                 <input
                   type="number"
-                  step={0.001}
-                  value={radToDeg(target[adjustAxis]).toFixed(2)}
-                  onChange={(e) => handleTargetChange(adjustAxis, parseFloat(e.target.value) || 0)}
+                  value={target[adjustAxis]}
+                  onChange={(e) => handleTargetChange(adjustAxis, parseFloat(e.target.value || 0))}
                   className="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-slate-100 text-right text-xs focus:outline-none focus:border-blue-500 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none appearance-none"/>
                 <span className="text-slate-400 text-xs">°</span>
-
               </div>
             )})}
           </div>

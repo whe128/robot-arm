@@ -4,6 +4,10 @@ import {
   quaternionSlerp,
 } from "@/kinematics/transforms";
 
+import { useEffect, useRef } from "react";
+
+const degToRad = (deg) => (deg * Math.PI) / 180;
+
 const wave = (t, deg, freq = 1) =>
   (Math.sin(t * Math.PI * 2 * freq) * (deg * Math.PI)) / 180;
 
@@ -160,13 +164,16 @@ const moveDance = (onUpdate, duration = 2500) => {
   return moveAnimation(danceNewJoints, onUpdate, duration);
 };
 
-const moveToTarget = (targetPose, onUpdate, onStop, duration = 2500) => {
+const moveToTarget = (onUpdate, onStop, duration = 2500) => {
+
+
   let stopped = true;
   let startTime = 0;
   let currentJoints = [];
   let startPose = null;
   let startQuat = null;
-  const targetQuat = getQuaternionFromEular(targetPose);
+  let targetPose = null;
+  let targetQuat = null;
 
   const tick = (now) => {
     if (stopped) return;
@@ -175,7 +182,6 @@ const moveToTarget = (targetPose, onUpdate, onStop, duration = 2500) => {
     const t = Math.min((now - startTime) / duration, 1);
     const ease = 1 - Math.pow(1 - t, 2);
 
-    // TODO: alter the interpolitation by quaternion slerp for better rotation interpolation
     const middleTargetPosition = {
       x: startPose.x + (targetPose.x - startPose.x) * ease,
       y: startPose.y + (targetPose.y - startPose.y) * ease,
@@ -184,7 +190,6 @@ const moveToTarget = (targetPose, onUpdate, onStop, duration = 2500) => {
 
     const middleTargetQuat = quaternionSlerp(startQuat, targetQuat, ease);
 
-    // TODO: calculate the new joint angles by inverse kinematics
     currentJoints = inverseKinematics(
       middleTargetPosition,
       middleTargetQuat,
@@ -200,25 +205,30 @@ const moveToTarget = (targetPose, onUpdate, onStop, duration = 2500) => {
     }
   };
 
-  const start = (joints) => {
+  const start = (joints, targetPoseInput) => {
     startPose = endEffectorPose(joints);
     startQuat = getQuaternionFromEular(startPose);
-    console.log("Start Pose:", startPose);
-    console.log("Target Pose:", targetPose);
+
+    targetPose = {...targetPoseInput};
+    targetQuat = getQuaternionFromEular({
+      roll: degToRad(targetPose.roll),
+      pitch: degToRad(targetPose.pitch),
+      yaw: degToRad(targetPose.yaw),
+    });
+
     const cosHalfTheta =
       startQuat.w * targetQuat.w +
       startQuat.x * targetQuat.x +
       startQuat.y * targetQuat.y +
       startQuat.z * targetQuat.z;
+
     const posClose =
       Math.abs(targetPose.x - startPose.x) < 0.001 &&
       Math.abs(targetPose.y - startPose.y) < 0.001 &&
       Math.abs(targetPose.z - startPose.z) < 0.001;
 
-    console.log("posClose:", posClose);
-    console.log("cosHalfTheta:", cosHalfTheta);
     // if already at target, stop
-    if (posClose && Math.abs(cosHalfTheta) > 0.9999) {
+    if (posClose && Math.abs(cosHalfTheta) > 0.99999) {
       onStop();
       return;
     }

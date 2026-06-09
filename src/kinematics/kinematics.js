@@ -190,7 +190,7 @@ const solve6x6 = (A, b) => {
     }
   }
 
-  return M.map(row => row[n]);
+  return M.map((row) => row[n]);
 };
 
 const inverseKinematics = (
