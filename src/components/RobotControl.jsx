@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { moveToTarget, moveToOrigin, moveWave, moveSweep, moveDance } from "@/animation/animation";
+import { moveToTarget, moveToOrigin, moveWave, moveSweep, moveDance, moveSequence } from "@/animation/animation";
 import { endEffectorPose } from "@/kinematics/kinematics";
 
 
@@ -16,7 +16,7 @@ const Panel = ({ title, children }) => {
 
 const JointSlider = ({ label, value, min, max, onChange, disabled }) => {
   return (
-    <div className="mb-2.5 last:mb-0">
+    <div className="mb-2 last:mb-0">
       <div className="flex justify-between text-xs mb-1">
         <span className="text-slate-400">{label}</span>
         <span className="text-slate-200 font-medium">{value.toFixed(2)}°</span>
@@ -67,6 +67,10 @@ const RobotControl = ({
   joints,
   onJointChangeSingle,
   onJointChangeWhole,
+  showSequence,
+  setShowSequence,
+  sequenceList,
+  isLoop,
 }) => {
 
   // degree state for sliders
@@ -77,8 +81,8 @@ const RobotControl = ({
   // true position of target in world coordinate, not the show position of input box
   const [target, setTarget] = useState({
     x: 0,
-    y: 0.421,
-    z: 0.322 ,
+    y: 0.30,
+    z: 0.25,
     roll: 0,
     pitch: 0,
     yaw: 0});
@@ -94,7 +98,6 @@ const RobotControl = ({
     setTarget(next);
   };
 
-
   const onStop = () => setActiveAnim(null);
 
   const animationHandleMap = useRef({
@@ -103,11 +106,12 @@ const RobotControl = ({
     wave: moveWave(onJointChangeWhole),
     sweep: moveSweep(onJointChangeWhole),
     dance: moveDance(onJointChangeWhole),
+    sequence: moveSequence(onJointChangeWhole, onStop),
   }).current;
 
-  const handleAnim = (mode) => {
+  const handleAnim = (mode, sameModeContinue = false) => {
     // if same mode clicked, stop. else start new mode
-    const next = mode === activeAnim ? null : mode;
+    const next = (mode === activeAnim && !sameModeContinue) ? null : mode;
 
     // stop current
     animationHandleMap[activeAnim]?.stop();
@@ -118,20 +122,22 @@ const RobotControl = ({
     // start new mode
     if (next === "target"){
       animationHandleMap[next]?.start(joints, target);
-      return;
+    } else if (next === "sequence") {
+      animationHandleMap[next]?.start(joints, sequenceList, isLoop);
+    } else {
+      animationHandleMap[next]?.start(joints);
     }
-    animationHandleMap[next]?.start(joints);
-
   };
 
   const endEffector = endEffectorPose(joints);
 
   const anims = [
-    { id: "target",   label: "Move to Target" },
-    { id: "origin",   label: "Move to Origin" },
     { id: "wave",     label: "Wave" },
+    { id: "target",   label: "Target" },
     { id: "sweep",    label: "Sweep" },
+    { id: "origin",   label: "Origin" },
     { id: "dance",    label: "Dance" },
+    { id: "sequence", label: "Sequence" },
   ];
 
   const jointsInfo = [
@@ -149,10 +155,8 @@ const RobotControl = ({
       Z: "y",
     };
 
-
-
   return (
-    <div className="flex flex-col gap-3 w-[280px]">
+    <div className="flex flex-col relative gap-2 w-[280px]">
 
       {/* End Effector */}
       <Panel title="END POINT">
@@ -208,57 +212,78 @@ const RobotControl = ({
 
       {/* Animation */}
       <Panel title="CONTROL">
-        <div className="flex gap-10 mb-3">
-          <div className="flex flex-col gap-1 w-1/2">
-            {["X", "Y", "Z"].map((axis) => {
-              const adjustAxis = axisMap[axis];
+        <div className = "relative">
+          <div className="flex gap-10 mb-3">
+            <div className="flex flex-col gap-1 w-1/2">
+              {["X", "Y", "Z"].map((axis) => {
+                const adjustAxis = axisMap[axis];
+
+                return (
+                  <div key={axis} className="flex items-center gap-8 flex-1">
+                    <span className="text-slate-400 text-xs">{axis}</span>
+                    <input
+                      type="number"
+                      value={target[adjustAxis]}
+                      onChange={(e) => handleTargetChange(adjustAxis, parseFloat(e.target.value) || 0)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleAnim("target", true);
+                        }
+                      }}
+                      className="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-slate-100 text-right text-xs focus:outline-none focus:border-blue-500 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none appearance-none"/>
+                  </div>
+              )})}
+            </div>
+
+            <div className="flex flex-col gap-1 w-1/2">
+              {["Roll", "Pitch", "Yaw"].map((axis) => {
+                const adjustAxis = axis.toLowerCase();
 
               return (
-                <div key={axis} className="flex items-center gap-8 flex-1">
-                  <span className="text-slate-400 text-xs">{axis}</span>
+                <div key={axis} className="flex items-center gap-1 flex-1">
+                  <span className="w-13 text-slate-400 text-xs">{axis}</span>
                   <input
                     type="number"
                     value={target[adjustAxis]}
-                    onChange={(e) => handleTargetChange(adjustAxis, parseFloat(e.target.value) || 0)}
+                    onChange={(e) => handleTargetChange(adjustAxis, parseFloat(e.target.value || 0))}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleAnim("target", true);
+                        }
+                      }}
                     className="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-slate-100 text-right text-xs focus:outline-none focus:border-blue-500 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none appearance-none"/>
+                  <span className="text-slate-400 text-xs">°</span>
                 </div>
-            )})}
+              )})}
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1 w-1/2">
-            {["Roll", "Pitch", "Yaw"].map((axis) => {
-              const adjustAxis = axis.toLowerCase();
-
-            return (
-              <div key={axis} className="flex items-center gap-1 flex-1">
-                <span className="w-13 text-slate-400  text-xs">{axis}</span>
-                <input
-                  type="number"
-                  value={target[adjustAxis]}
-                  onChange={(e) => handleTargetChange(adjustAxis, parseFloat(e.target.value || 0))}
-                  className="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-slate-100 text-right text-xs focus:outline-none focus:border-blue-500 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none appearance-none"/>
-                <span className="text-slate-400 text-xs">°</span>
-              </div>
-            )})}
-          </div>
-        </div>
-
-
-        <div className="flex flex-col gap-1.5">
-          {anims.map(({ id, label }) => (
+          <div className="flex flex-col gap-1.5">
+            <div className="grid grid-cols-2 gap-2">
+              {anims.map(({ id, label }) => (
+                <AnimBtn
+                  key={id}
+                  label={label}
+                  active={activeAnim === id}
+                  onClick={() => handleAnim(id)}
+                />
+              ))}
+            </div>
             <AnimBtn
-              key={id}
-              label={label}
-              active={activeAnim === id}
-              onClick={() => handleAnim(id)}
+              label="Stop"
+              active={!activeAnim}
+              onClick={() => handleAnim(null)}
+              stop = {true}
             />
-          ))}
-          <AnimBtn
-            label="Stop"
-            active={!activeAnim}
-            onClick={() => handleAnim(null)}
-            stop = {true}
-          />
+          </div>
+
+          <button
+            onClick={() => setShowSequence(v => !v)}
+            className="absolute -top-8 right-2 text-xs px-3 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:border-blue-500"
+          >
+            {showSequence ? "<" : ">"}
+          </button>
+
         </div>
       </Panel>
     </div>

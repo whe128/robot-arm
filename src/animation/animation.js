@@ -4,8 +4,6 @@ import {
   quaternionSlerp,
 } from "@/kinematics/transforms";
 
-import { useEffect, useRef } from "react";
-
 const degToRad = (deg) => (deg * Math.PI) / 180;
 
 const wave = (t, deg, freq = 1) =>
@@ -20,15 +18,20 @@ const resetJoint = (now, startTime, startAngles, duration = 500) => {
   return { newJoints, t };
 };
 
-const moveToOrigin = (onUpdate, onStop, duration = 2500) => {
+const moveToOrigin = (onUpdate, onStop, duration = 2000) => {
   let stopped = true;
   let startTime = 0;
   let startAngles = [];
+  const originalJoints = [0, -0.4089, 0.9453, 0, -0.5364, 0];
 
   const tick = (now) => {
     if (stopped) return;
 
-    const { newJoints, t } = resetJoint(now, startTime, startAngles, duration);
+    const t = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 2);
+    const newJoints = startAngles.map(
+      (a, i) => a + (originalJoints[i] - a) * ease,
+    );
 
     onUpdate(newJoints);
 
@@ -40,7 +43,12 @@ const moveToOrigin = (onUpdate, onStop, duration = 2500) => {
   };
 
   const start = (joints) => {
-    if (joints.every((angle) => angle === 0)) {
+    if (
+      joints.every((angle) => {
+        const originAngle = originalJoints[joints.indexOf(angle)];
+        return Math.abs(angle - originAngle) < 0.001;
+      })
+    ) {
       onStop();
       return;
     }
@@ -164,9 +172,7 @@ const moveDance = (onUpdate, duration = 2500) => {
   return moveAnimation(danceNewJoints, onUpdate, duration);
 };
 
-const moveToTarget = (onUpdate, onStop, duration = 2500) => {
-
-
+const moveToTarget = (onUpdate, onStop, duration = 2000) => {
   let stopped = true;
   let startTime = 0;
   let currentJoints = [];
@@ -209,7 +215,7 @@ const moveToTarget = (onUpdate, onStop, duration = 2500) => {
     startPose = endEffectorPose(joints);
     startQuat = getQuaternionFromEular(startPose);
 
-    targetPose = {...targetPoseInput};
+    targetPose = { ...targetPoseInput };
     targetQuat = getQuaternionFromEular({
       roll: degToRad(targetPose.roll),
       pitch: degToRad(targetPose.pitch),
@@ -247,4 +253,117 @@ const moveToTarget = (onUpdate, onStop, duration = 2500) => {
   return { start, stop };
 };
 
-export { moveToOrigin, moveWave, moveSweep, moveDance, moveToTarget };
+const moveSequence = (onUpdate, onStop, duration = 1000) => {
+  let sequenceList = null;
+  let isLoop = false;
+  let currentJoints = [];
+  let currentIndex = -1;
+  let startTime = 0;
+  let stopped = true;
+
+  let startPose = null;
+  let startQuat = null;
+
+  const tick = (now) => {
+    if (stopped) return;
+
+    // the ratio of move progress
+    const t = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 2);
+
+    const targetPose = sequenceList[currentIndex];
+    const targetQuat = getQuaternionFromEular({
+      roll: degToRad(targetPose.roll),
+      pitch: degToRad(targetPose.pitch),
+      yaw: degToRad(targetPose.yaw),
+    });
+
+    const middleTargetPosition = {
+      x: startPose.x + (targetPose.x - startPose.x) * ease,
+      y: startPose.y + (targetPose.y - startPose.y) * ease,
+      z: startPose.z + (targetPose.z - startPose.z) * ease,
+    };
+
+    const cosHalfTheta =
+      startQuat.w * targetQuat.w +
+      startQuat.x * targetQuat.x +
+      startQuat.y * targetQuat.y +
+      startQuat.z * targetQuat.z;
+
+    const posClose =
+      Math.abs(targetPose.x - startPose.x) < 0.001 &&
+      Math.abs(targetPose.y - startPose.y) < 0.001 &&
+      Math.abs(targetPose.z - startPose.z) < 0.001;
+
+    const closeEnough = posClose && Math.abs(cosHalfTheta) > 0.99999;
+
+    if (closeEnough || t >= 1) {
+      // close enough to target, go to next sequence
+      // move to next sequence
+      currentIndex += 1;
+      // update the start time of next sequence
+      startTime = now;
+      // update the start pose and quat of next sequence
+      startPose = { ...targetPose };
+      startQuat = { ...targetQuat };
+
+      if (currentIndex >= sequenceList.length) {
+        // loop retuen back to the first sequence
+        if (isLoop) {
+          currentIndex = 0;
+        } else {
+          onStop();
+          return;
+        }
+      }
+    } else {
+      const middleTargetQuat = quaternionSlerp(startQuat, targetQuat, ease);
+
+      currentJoints = inverseKinematics(
+        middleTargetPosition,
+        middleTargetQuat,
+        currentJoints,
+      );
+
+      onUpdate(currentJoints);
+    }
+
+    requestAnimationFrame(tick);
+  };
+
+  const start = (joints, sequenceListInput, isLoopInput) => {
+    // no sequence, stop immediately
+    if (!sequenceListInput || sequenceListInput.length === 0) {
+      onStop();
+      return;
+    }
+
+    sequenceList = sequenceListInput;
+    isLoop = isLoopInput;
+    currentIndex = 0;
+    currentJoints = [...joints];
+
+    // initial iteration's start pose and quaternion
+    startPose = endEffectorPose(joints);
+    startQuat = getQuaternionFromEular(startPose);
+
+    startTime = performance.now();
+    stopped = false;
+    requestAnimationFrame(tick);
+  };
+
+  const stop = () => {
+    stopped = true;
+  };
+
+  return { start, stop };
+};
+
+export {
+  moveToOrigin,
+  moveWave,
+  moveSweep,
+  moveDance,
+  moveToTarget,
+  moveSequence,
+};
