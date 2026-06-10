@@ -39,7 +39,7 @@ const RobotViewer = ({ joints }) => {
       // ── Camera ─────────────────────────────────────────────────────────────
       const camera = new THREE.PerspectiveCamera(50, w / h, 0.01, 200);
       // camera pos
-      camera.position.set(2.5, 1.5, 0.5);
+      camera.position.set(1.5, 1.5, 2);
 
       // ── Renderer ───────────────────────────────────────────────────────────
       const renderer = new THREE.WebGLRenderer({ antialias: true });

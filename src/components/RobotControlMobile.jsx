@@ -174,7 +174,7 @@ const RobotControlMobile = ({
             {["X", "Y", "Z"].map((axis) => {
               const adjustAxis = axisMap[axis];
 
-              const value = (Math.round(endEffector[adjustAxis] ?? 0 * 1000) / 1000).toFixed(3);
+              const value = (Math.round((endEffector[adjustAxis] ?? 0) * 1000) / 1000).toFixed(3);
 
               return (
               <div key={axis} className="flex items-center justify-between text-s">
