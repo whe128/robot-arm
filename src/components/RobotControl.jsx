@@ -341,7 +341,7 @@ const RobotControl = ({
             onClick={() => setShowSequence(v => !v)}
             className="absolute -top-8 right-2 text-xs px-3 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:border-blue-500"
           >
-            {showSequence ? "<" : ">"}
+            {showSequence ? "Sequence_List <" : "Sequence_List >"}
           </button>
 
         </div>

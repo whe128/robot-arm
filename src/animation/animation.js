@@ -4,6 +4,8 @@ import {
   quaternionSlerp,
 } from "@/kinematics/transforms";
 
+const originalJoints = [0, -0.4089, 0.9453, 0, -0.5364, 0];
+
 const degToRad = (deg) => (deg * Math.PI) / 180;
 
 const wave = (t, deg, freq = 1) =>
@@ -22,7 +24,6 @@ const moveToOrigin = (onUpdate, onStop, duration = 2000) => {
   let stopped = true;
   let startTime = 0;
   let startAngles = [];
-  const originalJoints = [0, -0.4089, 0.9453, 0, -0.5364, 0];
 
   const tick = (now) => {
     if (stopped) return;
@@ -267,12 +268,36 @@ const moveSequence = (onUpdate, onStop, duration = 800) => {
   let startPose = null;
   let startQuat = null;
 
+  let hasResetOrigin = false;
+  let startAngles = [];
+
   const tick = (now) => {
     if (stopped) return;
 
     // the ratio of move progress
     const t = Math.min((now - startTime) / duration, 1);
-    const ease = 1 - Math.pow(1 - t, 1);
+    const ease = 1 - Math.pow(1 - t, 1.5);
+
+    // move to origin first if not yet, then start the sequence animation
+    if (!hasResetOrigin) {
+      const newJoints = startAngles.map(
+        (a, i) => a + (originalJoints[i] - a) * ease,
+      );
+
+      onUpdate(newJoints);
+
+      if (t >= 1) {
+        // already reset to origin, then set the start time and start pose/quat for next animation
+        hasResetOrigin = true;
+        startTime = now;
+        startPose = endEffectorPose(newJoints);
+        startQuat = getQuaternionFromEular(startPose);
+        currentJoints = newJoints;
+      }
+
+      requestAnimationFrame(tick);
+      return;
+    }
 
     const targetPose = sequenceList[currentIndex];
     const targetQuat = getQuaternionFromEular({
@@ -282,9 +307,9 @@ const moveSequence = (onUpdate, onStop, duration = 800) => {
     });
 
     const middleTargetPosition = {
-      x: startPose.x + (targetPose.x - startPose.x) * ease,
-      y: startPose.y + (targetPose.y - startPose.y) * ease,
-      z: startPose.z + (targetPose.z - startPose.z) * ease,
+      x: startPose.x + (targetPose.x - startPose.x) * t,
+      y: startPose.y + (targetPose.y - startPose.y) * t,
+      z: startPose.z + (targetPose.z - startPose.z) * t,
     };
 
     const cosHalfTheta =
@@ -342,10 +367,22 @@ const moveSequence = (onUpdate, onStop, duration = 800) => {
       return;
     }
 
+    if (
+      joints.every((angle) => {
+        const originAngle = originalJoints[joints.indexOf(angle)];
+        return Math.abs(angle - originAngle) < 0.001;
+      })
+    ) {
+      hasResetOrigin = true;
+    } else {
+      hasResetOrigin = false;
+    }
+
     sequenceList = sequenceListInput;
     isLoop = isLoopInput;
     currentIndex = 0;
     currentJoints = [...joints];
+    startAngles = [...joints];
 
     // initial iteration's start pose and quaternion
     startPose = endEffectorPose(joints);
