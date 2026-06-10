@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { moveToTarget, moveToOrigin, moveWave, moveSweep, moveDance, moveSequence } from "@/animation/animation";
+import { moveToTarget, moveToOrigin, moveWave, moveSweep, moveDance, moveSequence, moveManual } from "@/animation/animation";
 import { endEffectorPose } from "@/kinematics/kinematics";
 
 
@@ -129,6 +129,18 @@ const RobotControl = ({
     }
   };
 
+  const handleManualMove = useRef(moveManual(onJointChangeWhole)).current;
+
+  const handleManualMoveStart = (moveField, isAdd) => {
+    handleManualMove.start(joints, moveField, isAdd);
+    setActiveAnim("manual");
+  }
+
+  const handleManualMoveStop = () => {
+    handleManualMove.stop();
+    setActiveAnim(null);
+  }
+
   const endEffector = endEffectorPose(joints);
 
   const anims = [
@@ -156,35 +168,81 @@ const RobotControl = ({
     };
 
   return (
-    <div className="flex flex-col relative gap-2 w-[280px]">
+    <div className="flex flex-col relative gap-2 w-[280px] select-none">
 
       {/* End Effector */}
       <Panel title="END POINT">
-        <div className="flex gap-18">
-          <div className="flex flex-col gap-1 w-1/2">
-            {["X", "Y", "Z"].map((axis) => (
-              <div key={axis} className="flex justify-between text-xs">
-                <span className="text-slate-400">{axis}</span>
-                <span className="font-mono text-slate-100">
-                  {(endEffector[axisMap[axis]] ?? 0).toFixed(3)}
+        <div className="flex gap-3 justify-between items-center">
+          <div className="flex flex-col gap-1">
+            {["X", "Y", "Z"].map((axis) => {
+              const adjustAxis = axisMap[axis];
+
+              return (
+              <div key={axis} className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 mr-2">{axis}</span>
+
+                <button
+                  disabled={isAnimating}
+                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  onPointerDown={() => handleManualMoveStart(adjustAxis, false)}
+                  onPointerUp={handleManualMoveStop}
+                  onPointerLeave={handleManualMoveStop}
+                >
+                  -
+                </button>
+
+                <span className="font-mono text-slate-100 w-11 text-right">
+                  {(endEffector[adjustAxis] ?? 0).toFixed(3)}
                 </span>
+
+                <button
+                  disabled={isAnimating}
+                  className={`w-5 h-5 ml-1 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  onPointerDown={() => handleManualMoveStart(adjustAxis, true)}
+                  onPointerUp={handleManualMoveStop}
+                  onPointerLeave={handleManualMoveStop}
+                >
+                  +
+                </button>
+
               </div>
-              )
+              )}
             )}
           </div>
 
-          <div className="flex flex-col gap-1 w-1/2">
+          <div className="flex flex-col gap-1">
             {["Roll", "Pitch", "Yaw"].map((axis) => {
               const adjustAxis = axis.toLowerCase();
 
               const deg = radToDeg(endEffector[adjustAxis] ?? 0);
 
               return (
-              <div key={axis} className="flex justify-between text-xs">
-                <span className="text-slate-400">{axis}</span>
-                <span className="font-mono text-slate-100">
+              <div key={axis} className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 w-7 mr-2">{axis}</span>
+
+                <button
+                  disabled={isAnimating}
+                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  onPointerDown={() => handleManualMoveStart(adjustAxis, false)}
+                  onPointerUp={handleManualMoveStop}
+                  onPointerLeave={handleManualMoveStop}
+                >
+                  -
+                </button>
+
+                <span className="font-mono text-slate-100 w-15 text-right">
                   {(deg ?? 0).toFixed(2)}°
                 </span>
+
+                <button
+                  disabled={isAnimating}
+                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  onPointerDown={() => handleManualMoveStart(adjustAxis, true)}
+                  onPointerUp={handleManualMoveStop}
+                  onPointerLeave={handleManualMoveStop}
+                >
+                  +
+                </button>
               </div>
             );
             })}

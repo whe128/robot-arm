@@ -43,6 +43,7 @@ const moveToOrigin = (onUpdate, onStop, duration = 2000) => {
   };
 
   const start = (joints) => {
+    stopped = true;
     if (
       joints.every((angle) => {
         const originAngle = originalJoints[joints.indexOf(angle)];
@@ -99,6 +100,7 @@ const moveAnimation = (animationNewJontsFunc, onUpdate, duration = 2500) => {
   };
 
   const start = (joints) => {
+    stopped = true;
     startAngles = [...joints];
     startTime = performance.now();
     stopped = false;
@@ -212,6 +214,7 @@ const moveToTarget = (onUpdate, onStop, duration = 2000) => {
   };
 
   const start = (joints, targetPoseInput) => {
+    stopped = true;
     startPose = endEffectorPose(joints);
     startQuat = getQuaternionFromEular(startPose);
 
@@ -332,6 +335,7 @@ const moveSequence = (onUpdate, onStop, duration = 1000) => {
   };
 
   const start = (joints, sequenceListInput, isLoopInput) => {
+    stopped = true;
     // no sequence, stop immediately
     if (!sequenceListInput || sequenceListInput.length === 0) {
       onStop();
@@ -359,6 +363,70 @@ const moveSequence = (onUpdate, onStop, duration = 1000) => {
   return { start, stop };
 };
 
+const moveManual = (onUpdate, speedPos = 0.1, speedRad = 1) => {
+  let stopped = true;
+  let startTime = 0;
+  let currentJoints = [];
+
+  let startPose = null;
+  let startQuat = null;
+
+  let moveSpeed = null;
+
+  const tick = (now) => {
+    if (stopped) {
+      return;
+    }
+
+    const elapsed = (now - startTime) / 1000; // in seconds
+
+    const targetPose = {
+      x: startPose.x + moveSpeed.x * elapsed,
+      y: startPose.y + moveSpeed.y * elapsed,
+      z: startPose.z + moveSpeed.z * elapsed,
+      roll: startPose.roll + moveSpeed.roll * elapsed,
+      pitch: startPose.pitch + moveSpeed.pitch * elapsed,
+      yaw: startPose.yaw + moveSpeed.yaw * elapsed,
+    };
+
+    currentJoints = inverseKinematics(
+      targetPose,
+      getQuaternionFromEular(targetPose),
+      currentJoints,
+    );
+
+    onUpdate(currentJoints);
+    requestAnimationFrame(tick);
+  };
+
+  const start = (joints, moveField, isAdd) => {
+    stopped = true;
+    // record the start pose
+    startPose = endEffectorPose(joints);
+    startQuat = getQuaternionFromEular(startPose);
+    currentJoints = [...joints];
+
+    const sign = isAdd ? 1 : -1;
+    moveSpeed = { x: 0, y: 0, z: 0, roll: 0, pitch: 0, yaw: 0 };
+
+    if (["x", "y", "z"].includes(moveField)) {
+      moveSpeed[moveField] = sign * speedPos;
+    } else {
+      moveSpeed[moveField] = sign * speedRad;
+    }
+
+    startTime = performance.now();
+    stopped = false;
+    requestAnimationFrame(tick);
+  };
+
+  const stop = () => {
+    stopped = true;
+  };
+
+  return { start, stop };
+};
+
 export {
   moveToOrigin,
   moveWave,
@@ -366,4 +434,5 @@ export {
   moveDance,
   moveToTarget,
   moveSequence,
+  moveManual,
 };
