@@ -95,7 +95,7 @@ const SequencePanel = ({
           type="checkbox"
           checked={isLoop}
           onChange={(e) => setIsLoop(e.target.checked)}
-          className="w-3 h-3 accent-blue-500"
+          className="w-4 h-4 accent-blue-500"
         />
         Loop
       </label>
