@@ -45,11 +45,12 @@ const AnimBtn = ({ label, active, onClick, stop = false }) => {
       onClick={onClick}
 
       className={`
-        w-full text-left py-1.5 px-2.5 text-xs rounded-md border transition-colors duration-150
+        w-full py-1.5 px-2.5 text-xs rounded-md border transition-colors duration-150
         ${active
           ? "bg-slate-800 border-slate-600 text-slate-100"
           : "bg-transparent border-slate-800 text-slate-300 hover:bg-slate-800/50 hover:border-slate-700"
         }
+        ${stop ? "text-center":"text-left"}
       `}
     >
       <span className="inline-block w-3 mr-1 text-[10px]">
@@ -80,6 +81,7 @@ const RobotControl = ({
 
   // true position of target in world coordinate, not the show position of input box
   const [target, setTarget] = useState({
+    id: Date.now() + Math.random(),
     x: 0,
     y: 0.30,
     z: 0.25,
@@ -171,7 +173,7 @@ const RobotControl = ({
     <div className="flex flex-col relative gap-2 w-[280px] select-none">
 
       {/* End Effector */}
-      <Panel title="END POINT">
+      <Panel title="END_POINT">
         <div className="flex gap-3 justify-between items-center">
           <div className="flex flex-col gap-1">
             {["X", "Y", "Z"].map((axis) => {
