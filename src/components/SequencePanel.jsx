@@ -1,14 +1,30 @@
-import { useState } from "react";
 
-  const axisMap = {
-        X: "z",
-        Y: "x",
-        Z: "y",
-        Roll: "roll",
-        Pitch: "pitch",
-        Yaw: "yaw"
-  };
-  const poseFields = ["X", "Y", "Z", "Roll", "Pitch", "Yaw"];
+const axisMap = {
+      X: "z",
+      Y: "x",
+      Z: "y",
+      Roll: "roll",
+      Pitch: "pitch",
+      Yaw: "yaw"
+};
+const poseFields = ["X", "Y", "Z", "Roll", "Pitch", "Yaw"];
+const templateSequence =[
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.4, roll: 0, pitch: 0, yaw: 0 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.1, roll: 0, pitch: 0, yaw: 0 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
+    { id: crypto.randomUUID(), x: 0.2, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
+    { id: crypto.randomUUID(), x: -0.2, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 45 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: -45 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 45, yaw: 0 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 45, yaw: 45 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 45, yaw: -45 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 45, yaw: 0 },
+    { id: crypto.randomUUID(), x: 0, y: 0.422, z: 0.321, roll: 0, pitch: 0, yaw: 0 },
+    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
+  ];
 
 const SequencePanel = ({
   sequenceList,
@@ -57,6 +73,7 @@ const SequencePanel = ({
   };
 
 
+
   return (
     <div className="relative w-[440px] bg-slate-900 border border-slate-700 rounded p-2">
       <button
@@ -65,6 +82,14 @@ const SequencePanel = ({
         >
         {"<"}
       </button>
+
+      <button
+        onClick={() => setSequenceList(templateSequence)}
+        className="absolute top-1 left-60 text-xs px-3 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:border-blue-500"
+        >
+        {"Template"}
+      </button>
+
       <label className="absolute right-8 flex items-center gap-2 text-xs text-slate-400 mb-2">
         <input
           type="checkbox"

@@ -10,21 +10,15 @@ const Home = () => {
   const [joints, setJoints] = useState([0, -0.4089, 0.9453, 0, -0.5364, 0]); // j1 ~ j6
 
   const [sequenceList, setSequenceList] = useState([
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.4, roll: 0, pitch: 0, yaw: 0 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.1, roll: 0, pitch: 0, yaw: 0 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
-    { id: crypto.randomUUID(), x: 0.2, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
-    { id: crypto.randomUUID(), x: -0.2, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 45 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: -45 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 45, yaw: 0 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 45, yaw: 45 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 45, yaw: -45 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 45, yaw: 0 },
-    { id: crypto.randomUUID(), x: 0, y: 0.422, z: 0.321, roll: 0, pitch: 0, yaw: 0 },
-    { id: crypto.randomUUID(), x: 0, y: 0.3, z: 0.25, roll: 0, pitch: 0, yaw: 0 },
+    {
+      id: crypto.randomUUID(),
+      x: 0,
+      y: 0.3,
+      z: 0.4,
+      roll: 0,
+      pitch: 0,
+      yaw: 0,
+    },
   ]);
 
   const [isLoop, setIsLoop] = useState(false);
