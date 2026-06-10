@@ -49,7 +49,7 @@ const Home = () => {
         {"<"}
       </button>
 
-      <div className="px-4 py-3 border-b border-[#21262d] text-sm font-semibold">
+      <div className="px-4 py-3 border-b border-[#21262d] text-sm font-semibold select-none">
         🦾 Robot Arm Simulation
       </div>
 
