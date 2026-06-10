@@ -256,7 +256,7 @@ const moveToTarget = (onUpdate, onStop, duration = 2000) => {
   return { start, stop };
 };
 
-const moveSequence = (onUpdate, onStop, duration = 1000) => {
+const moveSequence = (onUpdate, onStop, duration = 800) => {
   let sequenceList = null;
   let isLoop = false;
   let currentJoints = [];
@@ -363,7 +363,7 @@ const moveSequence = (onUpdate, onStop, duration = 1000) => {
   return { start, stop };
 };
 
-const moveManual = (onUpdate, speedPos = 0.1, speedRad = 1) => {
+const moveManual = (onUpdate, speedPos = 0.15, speedRad = 1.3) => {
   let stopped = true;
   let startTime = 0;
   let currentJoints = [];
