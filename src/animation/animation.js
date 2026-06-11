@@ -257,7 +257,7 @@ const moveToTarget = (onUpdate, onStop, duration = 2000) => {
   return { start, stop };
 };
 
-const moveCircle = (onUpdate, onTrace, duration = 1800, radius = 0.08) => {
+const moveCircle = (onUpdate, onTrace, duration = 1800, radius = 0.09) => {
   const startCicrcleJoints = [0, 0.33545228, 0.77510072, 0, -1.110553, 0];
   let stopped = true;
   let startTime = 0;

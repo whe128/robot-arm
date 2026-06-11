@@ -83,7 +83,7 @@ const RobotControlMobile = ({
   setIsTracing,
   handleClearTrace
 }) => {
-  const [activeTab, setActiveTab]   = useState("joints");
+  const [activeTab, setActiveTab]   = useState("control");
   const [activeAnim, setActiveAnim] = useState(null);
   const lastActiveAnim = useRef(null);
   const isAnimating = activeAnim !== null;
