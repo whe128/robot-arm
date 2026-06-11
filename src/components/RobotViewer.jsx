@@ -76,7 +76,7 @@ const RobotViewer = forwardRef(({ joints, isTracing }, ref) => {
       trailGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       trailGeo.setDrawRange(0, 0);
       const trailMat = new THREE.LineBasicMaterial({
-          color: 0x00e5ff,
+          color: 0xFF4DFF,
           linewidth: 2,
           vertexColors: false,
       });

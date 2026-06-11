@@ -156,6 +156,10 @@ const RobotControl = ({
   const handleManualMove = useRef(moveManual(onJointChangeWhole)).current;
 
   const handleManualMoveStart = (moveField, isAdd) => {
+    if (activeAnim && activeAnim !== "manual") {
+      return;
+    }
+
     animationHandleMap[activeAnim]?.stop();
 
     if (activeAnim) {
@@ -171,6 +175,9 @@ const RobotControl = ({
   }
 
   const handleManualMoveStop = () => {
+    if (activeAnim !== "manual") {
+      return;
+    }
     handleManualMove.stop();
     setActiveAnim(null);
   }
@@ -217,7 +224,7 @@ const RobotControl = ({
 
                 <button
                   disabled={isAnimating}
-                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"pointer-events-none":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
                   onPointerDown={() => handleManualMoveStart(adjustAxis, false)}
                   onPointerUp={handleManualMoveStop}
                   onPointerLeave={handleManualMoveStop}
@@ -231,7 +238,7 @@ const RobotControl = ({
 
                 <button
                   disabled={isAnimating}
-                  className={`w-5 h-5 ml-1 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"pointer-events-none":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  className={`w-5 h-5 ml-1 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
                   onPointerDown={() => handleManualMoveStart(adjustAxis, true)}
                   onPointerUp={handleManualMoveStop}
                   onPointerLeave={handleManualMoveStop}
@@ -255,7 +262,7 @@ const RobotControl = ({
 
                 <button
                   disabled={isAnimating}
-                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"pointer-events-none":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
                   onPointerDown={() => handleManualMoveStart(adjustAxis, false)}
                   onPointerUp={handleManualMoveStop}
                   onPointerLeave={handleManualMoveStop}
@@ -269,7 +276,7 @@ const RobotControl = ({
 
                 <button
                   disabled={isAnimating}
-                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"pointer-events-none":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
                   onPointerDown={() => handleManualMoveStart(adjustAxis, true)}
                   onPointerUp={handleManualMoveStop}
                   onPointerLeave={handleManualMoveStop}

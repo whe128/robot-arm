@@ -160,15 +160,32 @@ const RobotControlMobile = ({
   const handleManualMove = useRef(moveManual(onJointChangeWhole)).current;
 
   const handleManualMoveStart = (moveField, isAdd) => {
-    handleManualMove.start(joints, moveField, isAdd);
+    if (activeAnim && activeAnim !== "manual") {
+      return;
+    }
+
+    animationHandleMap[activeAnim]?.stop();
+
+    if (activeAnim) {
+      if (lastActiveAnim.current && lastActiveAnim.current !== next) {
+        handleClearTrace();
+      }
+      lastActiveAnim.current = activeAnim;
+    }
+
     setActiveAnim("manual");
+    handleManualMove.start(joints, moveField, isAdd);
     setIsTracing(true);
   }
 
   const handleManualMoveStop = () => {
+    if (activeAnim !== "manual") {
+      return;
+    }
     handleManualMove.stop();
     setActiveAnim(null);
   }
+
   const endEffector = endEffectorPose(joints);
 
   const axisMap  = { X: "z", Y: "x", Z: "y" };
