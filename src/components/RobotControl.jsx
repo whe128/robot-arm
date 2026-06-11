@@ -24,7 +24,7 @@ const JointSlider = ({ label, value, min, max, onChange, disabled }) => {
       <input
         type="range"
         min={min} max={max} step={0.01}
-        value={value}
+        value={(Math.round(value * 100) / 100).toFixed(2)}
         onChange={(e) => {
           if (disabled) return;
           onChange(e.target.value)
@@ -156,8 +156,17 @@ const RobotControl = ({
   const handleManualMove = useRef(moveManual(onJointChangeWhole)).current;
 
   const handleManualMoveStart = (moveField, isAdd) => {
-    handleManualMove.start(joints, moveField, isAdd);
+    animationHandleMap[activeAnim]?.stop();
+
+    if (activeAnim) {
+      if (lastActiveAnim.current && lastActiveAnim.current !== next) {
+        handleClearTrace();
+      }
+      lastActiveAnim.current = activeAnim;
+    }
+
     setActiveAnim("manual");
+    handleManualMove.start(joints, moveField, isAdd);
     setIsTracing(true);
   }
 
@@ -200,13 +209,15 @@ const RobotControl = ({
             {["X", "Y", "Z"].map((axis) => {
               const adjustAxis = axisMap[axis];
 
+              const value = (Math.round((endEffector[adjustAxis] ?? 0) * 1000) / 1000).toFixed(3);
+
               return (
               <div key={axis} className="flex items-center justify-between text-xs">
                 <span className="text-slate-400 mr-2">{axis}</span>
 
                 <button
                   disabled={isAnimating}
-                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"pointer-events-none":"hover:bg-slate-600 active:bg-slate-500"}`}
                   onPointerDown={() => handleManualMoveStart(adjustAxis, false)}
                   onPointerUp={handleManualMoveStop}
                   onPointerLeave={handleManualMoveStop}
@@ -215,12 +226,12 @@ const RobotControl = ({
                 </button>
 
                 <span className="font-mono text-slate-100 w-11 text-right">
-                  {(endEffector[adjustAxis] ?? 0).toFixed(3)}
+                  {value}
                 </span>
 
                 <button
                   disabled={isAnimating}
-                  className={`w-5 h-5 ml-1 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  className={`w-5 h-5 ml-1 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"pointer-events-none":"hover:bg-slate-600 active:bg-slate-500"}`}
                   onPointerDown={() => handleManualMoveStart(adjustAxis, true)}
                   onPointerUp={handleManualMoveStop}
                   onPointerLeave={handleManualMoveStop}
@@ -236,8 +247,7 @@ const RobotControl = ({
           <div className="flex flex-col gap-1">
             {["Roll", "Pitch", "Yaw"].map((axis) => {
               const adjustAxis = axis.toLowerCase();
-
-              const deg = radToDeg(endEffector[adjustAxis] ?? 0);
+              const deg = (Math.round(radToDeg(endEffector[adjustAxis] ?? 0) * 100) / 100).toFixed(2);
 
               return (
               <div key={axis} className="flex items-center justify-between text-xs">
@@ -245,7 +255,7 @@ const RobotControl = ({
 
                 <button
                   disabled={isAnimating}
-                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"pointer-events-none":"hover:bg-slate-600 active:bg-slate-500"}`}
                   onPointerDown={() => handleManualMoveStart(adjustAxis, false)}
                   onPointerUp={handleManualMoveStop}
                   onPointerLeave={handleManualMoveStop}
@@ -254,12 +264,12 @@ const RobotControl = ({
                 </button>
 
                 <span className="font-mono text-slate-100 w-15 text-right">
-                  {(deg ?? 0).toFixed(2)}°
+                  {deg}°
                 </span>
 
                 <button
                   disabled={isAnimating}
-                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"":"hover:bg-slate-600 active:bg-slate-500"}`}
+                  className={`w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-slate-100 ${isAnimating?"pointer-events-none":"hover:bg-slate-600 active:bg-slate-500"}`}
                   onPointerDown={() => handleManualMoveStart(adjustAxis, true)}
                   onPointerUp={handleManualMoveStop}
                   onPointerLeave={handleManualMoveStop}

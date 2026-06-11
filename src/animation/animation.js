@@ -258,7 +258,7 @@ const moveToTarget = (onUpdate, onStop, duration = 2000) => {
 };
 
 const moveCircle = (onUpdate, onTrance, duration = 1800, radius = 0.08) => {
-  const startCicrcleJoints = [0, -0.258309, 1.403419, 0, -1.145111, 0];
+  const startCicrcleJoints = [0, 0.33545228, 0.77510072, 0, -1.110553, 0];
   let stopped = true;
   let startTime = 0;
   let currentJoints = [];
@@ -297,11 +297,20 @@ const moveCircle = (onUpdate, onTrance, duration = 1800, radius = 0.08) => {
 
     const t = Math.min((now - startTime) / duration, 1);
 
+    const angle = -Math.PI / 4; // circle plane angle, fixed to 45 degree for better visual effect, can be changed to other angle or even animation
+    const dy = radius + radius * -Math.cos(t * 2 * Math.PI);
+
     const middleTargetPosition = {
       x: startPose.x + radius * -Math.sin(t * 2 * Math.PI),
-      y: startPose.y + radius + radius * -Math.cos(t * 2 * Math.PI),
-      z: startPose.z,
+      y: startPose.y + dy * Math.cos(angle),
+      z: startPose.z + dy * Math.sin(angle),
     };
+
+    // const middleTargetPosition = {
+    //   x: startPose.x + radius * -Math.sin(t * 2 * Math.PI),
+    //   y: startPose.y + radius + radius * -Math.cos(t * 2 * Math.PI),
+    //   z: startPose.z,
+    // };
     const middleTargetQuat = { ...startQuat };
 
     currentJoints = inverseKinematics(
