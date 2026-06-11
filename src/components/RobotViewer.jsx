@@ -6,16 +6,13 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import URDFLoader from "urdf-loader";
 
 
-const MAX_TRAIL_POINTS = 100;
-const MIN_TRACE_INTERVAL_MS = 25;
+const MAX_TRAIL_POINTS = 200;
 
 const RobotViewer = forwardRef(({ joints, isTracing }, ref) => {
   const mountRef = useRef(null);
   const robotRef = useRef(null);
   const trailRef = useRef(null);        // THREE.Line object
   const trailPtsRef  = useRef([]);      // Vector3[]
-
-  const lastTraceTimeRef = useRef(0);
 
   const clearTrail = () => {
     trailPtsRef.current = [];
@@ -208,10 +205,6 @@ const RobotViewer = forwardRef(({ joints, isTracing }, ref) => {
       }
       return
     };
-
-    const now = performance.now();
-    if (now - lastTraceTimeRef.current < MIN_TRACE_INTERVAL_MS) return;
-    lastTraceTimeRef.current = now;
 
     // read end-effector position and update the trail
     const eeLink = robot.getObjectByName("joint6");
