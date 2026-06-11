@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { moveToTarget, moveToOrigin, moveWave, moveSweep, moveDance, moveSequence, moveManual } from "@/animation/animation";
+import { moveToTarget, moveToOrigin, moveWave, moveSweep, moveDance, moveSequence, moveManual, moveCircle } from "@/animation/animation";
 import { endEffectorPose } from "@/kinematics/kinematics";
 
 
@@ -109,6 +109,7 @@ const RobotControl = ({
     sweep: moveSweep(onJointChangeWhole),
     dance: moveDance(onJointChangeWhole),
     sequence: moveSequence(onJointChangeWhole, onStop),
+    circle: moveCircle(onJointChangeWhole),
   }).current;
 
   const handleAnim = (mode, sameModeContinue = false) => {
@@ -146,12 +147,10 @@ const RobotControl = ({
   const endEffector = endEffectorPose(joints);
 
   const anims = [
-    { id: "wave",     label: "Wave" },
-    { id: "target",   label: "Target" },
-    { id: "sweep",    label: "Sweep" },
-    { id: "origin",   label: "Origin" },
-    { id: "dance",    label: "Dance" },
-    { id: "sequence", label: "Sequence" },
+    { id: "origin",     label: "Origin" },
+    { id: "target",     label: "Target" },
+    { id: "circle",     label: "Circle" },
+    { id: "sequence",   label: "Sequence"},
   ];
 
   const jointsInfo = [

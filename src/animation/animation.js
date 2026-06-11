@@ -257,6 +257,100 @@ const moveToTarget = (onUpdate, onStop, duration = 2000) => {
   return { start, stop };
 };
 
+const moveCircle = (onUpdate, duration = 1800, radius = 0.08) => {
+  const startCicrcleJoints = [0, -0.258309, 1.403419, 0, -1.145111, 0];
+  let stopped = true;
+  let startTime = 0;
+  let currentJoints = [];
+  let startPose = null;
+  let startQuat = null;
+  let hasResetOrigin = false;
+  let startAngles = [];
+
+  const tick = (now) => {
+    if (stopped) return;
+
+    // move to origin first if not yet, then start the sequence animation
+    if (!hasResetOrigin) {
+      const t = Math.min((2 * (now - startTime)) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 1.5);
+
+      const newJoints = startAngles.map(
+        (a, i) => a + (startCicrcleJoints[i] - a) * ease,
+      );
+
+      onUpdate(newJoints);
+
+      if (t >= 1) {
+        // already reset to origin, then set the start time and start pose/quat for next animation
+        hasResetOrigin = true;
+        startTime = now;
+        startPose = endEffectorPose(newJoints);
+        startQuat = getQuaternionFromEular(startPose);
+        currentJoints = newJoints;
+      }
+
+      requestAnimationFrame(tick);
+      return;
+    }
+
+    const t = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 1.5);
+
+    const middleTargetPosition = {
+      x: startPose.x + radius * -Math.sin(t * 2 * Math.PI),
+      y: startPose.y + radius + radius * -Math.cos(t * 2 * Math.PI),
+      z: startPose.z,
+    };
+    const middleTargetQuat = { ...startQuat };
+
+    currentJoints = inverseKinematics(
+      middleTargetPosition,
+      middleTargetQuat,
+      currentJoints,
+    );
+
+    onUpdate(currentJoints);
+
+    requestAnimationFrame(tick);
+
+    if (t >= 1) {
+      startTime = now;
+    }
+  };
+
+  const start = (joints) => {
+    stopped = true;
+
+    // check the start joint is already at the circle start position, if not, need reset to origin first
+    if (
+      joints.every((angle) => {
+        const originAngle = startCicrcleJoints[joints.indexOf(angle)];
+        return Math.abs(angle - originAngle) < 0.001;
+      })
+    ) {
+      hasResetOrigin = true;
+    } else {
+      hasResetOrigin = false;
+    }
+
+    startPose = endEffectorPose(joints);
+    startQuat = getQuaternionFromEular(startPose);
+
+    currentJoints = [...joints];
+    startAngles = [...joints];
+    startTime = performance.now();
+    stopped = false;
+    requestAnimationFrame(tick);
+  };
+
+  const stop = () => {
+    stopped = true;
+  };
+
+  return { start, stop };
+};
+
 const moveSequence = (onUpdate, onStop, duration = 800) => {
   let sequenceList = null;
   let isLoop = false;
@@ -470,6 +564,7 @@ export {
   moveSweep,
   moveDance,
   moveToTarget,
+  moveCircle,
   moveSequence,
   moveManual,
 };

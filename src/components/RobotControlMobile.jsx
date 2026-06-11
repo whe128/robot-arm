@@ -1,7 +1,7 @@
 import {SequencePanelMobile} from "@/components/SequencePanel";
 
 import { useState, useRef } from "react";
-import { moveToTarget, moveToOrigin, moveWave, moveSweep, moveDance, moveSequence, moveManual } from "@/animation/animation";
+import { moveToTarget, moveToOrigin, moveWave, moveSweep, moveDance, moveSequence, moveManual, moveCircle } from "@/animation/animation";
 
 import { endEffectorPose } from "@/kinematics/kinematics";
 
@@ -42,8 +42,8 @@ const AnimBtn = ({ label, active, onClick, stop = false }) => (
 
 // ─── Tab bar ──────────────────────────────────────────────────────────────────
 const TABS = [
-  { id: "endpoint", label: "END_POINT"},
   { id: "joints",   label: "JOINT" },
+  { id: "endpoint", label: "END_POINT"},
   { id: "control",  label: "CONTROL"},
   { id: "sequence",  label: "SEQUENCE"},
 ];
@@ -61,6 +61,7 @@ const TabBar = ({ active, onChange }) => (
             : "text-slate-500 hover:text-slate-300"}
         `}
       >
+
         {label}
       </button>
     ))}
@@ -80,7 +81,7 @@ const RobotControlMobile = ({
   setIsLoop,
   showMobilePanel
 }) => {
-  const [activeTab, setActiveTab]   = useState("endpoint");
+  const [activeTab, setActiveTab]   = useState("joints");
   const [activeAnim, setActiveAnim] = useState(null);
   const isAnimating = activeAnim !== null;
 
@@ -112,6 +113,7 @@ const RobotControlMobile = ({
     sweep:    moveSweep(onJointChangeWhole),
     dance:    moveDance(onJointChangeWhole),
     sequence: moveSequence(onJointChangeWhole, onStop),
+    circle:   moveCircle(onJointChangeWhole),
   }).current;
 
   const handleAnim = (mode, sameModeContinue = false) => {
@@ -159,12 +161,10 @@ const RobotControlMobile = ({
   ];
 
   const anims = [
-    { id: "wave",     label: "Wave"     },
-    { id: "target",   label: "Target"   },
-    { id: "sweep",    label: "Sweep"    },
-    { id: "origin",   label: "Origin"   },
-    { id: "dance",    label: "Dance"    },
-    { id: "sequence", label: "Sequence" },
+    { id: "origin",   label: "Origin"  },
+    { id: "target",   label: "Target"  },
+    { id: "circle",   label: "Circle"  },
+    { id: "sequence", label: "Sequence"},
   ];
 
   const EndPointPanel = (
