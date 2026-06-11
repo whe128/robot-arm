@@ -6,13 +6,13 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import URDFLoader from "urdf-loader";
 
 
-const MAX_TRAIL_POINTS = 1000;
+const MAX_TRAIL_POINTS = 300;
 
 const RobotViewer = forwardRef(({ joints, isTracing }, ref) => {
   const mountRef = useRef(null);
   const robotRef = useRef(null);
-  const trailRef = useRef(null);   // THREE.Line object
-  const trailPtsRef  = useRef([]);     // Vector3[]
+  const trailRef = useRef(null);        // THREE.Line object
+  const trailPtsRef  = useRef([]);      // Vector3[]
 
   const clearTrail = () => {
     trailPtsRef.current = [];

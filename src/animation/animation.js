@@ -257,7 +257,7 @@ const moveToTarget = (onUpdate, onStop, duration = 2000) => {
   return { start, stop };
 };
 
-const moveCircle = (onUpdate, onTrance, duration = 1800, radius = 0.08) => {
+const moveCircle = (onUpdate, onTrace, duration = 1800, radius = 0.08) => {
   const startCicrcleJoints = [0, 0.33545228, 0.77510072, 0, -1.110553, 0];
   let stopped = true;
   let startTime = 0;
@@ -266,6 +266,8 @@ const moveCircle = (onUpdate, onTrance, duration = 1800, radius = 0.08) => {
   let startQuat = null;
   let hasResetOrigin = false;
   let startAngles = [];
+
+  let drawBigCircle = true;
 
   const tick = (now) => {
     if (stopped) return;
@@ -288,7 +290,7 @@ const moveCircle = (onUpdate, onTrance, duration = 1800, radius = 0.08) => {
         startPose = endEffectorPose(newJoints);
         startQuat = getQuaternionFromEular(startPose);
         currentJoints = newJoints;
-        onTrance(true);
+        onTrace(true);
       }
 
       requestAnimationFrame(tick);
@@ -300,17 +302,42 @@ const moveCircle = (onUpdate, onTrance, duration = 1800, radius = 0.08) => {
     const angle = -Math.PI / 4; // circle plane angle, fixed to 45 degree for better visual effect, can be changed to other angle or even animation
     const dy = radius + radius * -Math.cos(t * 2 * Math.PI);
 
-    const middleTargetPosition = {
-      x: startPose.x + radius * -Math.sin(t * 2 * Math.PI),
-      y: startPose.y + dy * Math.cos(angle),
-      z: startPose.z + dy * Math.sin(angle),
-    };
+    let middleTargetPosition;
 
-    // const middleTargetPosition = {
-    //   x: startPose.x + radius * -Math.sin(t * 2 * Math.PI),
-    //   y: startPose.y + radius + radius * -Math.cos(t * 2 * Math.PI),
-    //   z: startPose.z,
-    // };
+    if (drawBigCircle) {
+      // 大圆，和原来一样
+      const dy = radius + radius * -Math.cos(t * 2 * Math.PI);
+      middleTargetPosition = {
+        x: startPose.x + radius * -Math.sin(t * 2 * Math.PI),
+        y: startPose.y + dy * Math.cos(angle),
+        z: startPose.z + dy * Math.sin(angle),
+      };
+    } else {
+      // two small circles
+      const r = radius / 2;
+      const localT = t < 0.5 ? t * 2 : (t - 0.5) * 2;
+      let dx, dy;
+      if (t < 0.5) {
+        dx = r * -Math.sin(localT * 2 * Math.PI);
+        dy = r - r * Math.cos(localT * 2 * Math.PI); // t=0: dy=0 ✓
+      } else {
+        dx = r * Math.sin(localT * 2 * Math.PI);
+        dy = -(r - r * Math.cos(localT * 2 * Math.PI)); // t=0: dy=0 ✓
+      }
+
+      middleTargetPosition = {
+        x: startPose.x + dx,
+        y: startPose.y + dy * Math.cos(angle),
+        z: startPose.z + dy * Math.sin(angle),
+      };
+
+      middleTargetPosition = {
+        x: startPose.x + dx,
+        y: startPose.y + dy * Math.cos(angle),
+        z: startPose.z + dy * Math.sin(angle),
+      };
+    }
+
     const middleTargetQuat = { ...startQuat };
 
     currentJoints = inverseKinematics(
@@ -325,6 +352,7 @@ const moveCircle = (onUpdate, onTrance, duration = 1800, radius = 0.08) => {
 
     if (t >= 1) {
       startTime = now;
+      drawBigCircle = !drawBigCircle;
     }
   };
 
@@ -339,11 +367,10 @@ const moveCircle = (onUpdate, onTrance, duration = 1800, radius = 0.08) => {
       })
     ) {
       hasResetOrigin = true;
-      onTrance(true);
     } else {
       hasResetOrigin = false;
-      onTrance(false);
     }
+    onTrace(hasResetOrigin);
 
     startPose = endEffectorPose(joints);
     startQuat = getQuaternionFromEular(startPose);
@@ -480,11 +507,11 @@ const moveSequence = (onUpdate, onStop, onTrace, duration = 800) => {
       })
     ) {
       hasResetOrigin = true;
-      onTrace(true);
     } else {
       hasResetOrigin = false;
-      onTrace(false);
     }
+
+    onTrace(hasResetOrigin);
 
     sequenceList = sequenceListInput;
     isLoop = isLoopInput;
@@ -498,6 +525,7 @@ const moveSequence = (onUpdate, onStop, onTrace, duration = 800) => {
 
     startTime = performance.now();
     stopped = false;
+
     requestAnimationFrame(tick);
   };
 

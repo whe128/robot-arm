@@ -134,20 +134,18 @@ const RobotControl = ({
 
     switch (next) {
       case "target":
-        animationHandleMap[next]?.start(joints, target);
         setIsTracing(true);
+        animationHandleMap[next]?.start(joints, target);
         break;
       case "sequence":
         animationHandleMap[next]?.start(joints, sequenceList, isLoop);
-        setIsTracing(false);
         break;
       case "circle":
         animationHandleMap[next]?.start(joints);
-        setIsTracing(false);
         break;
       case "origin":
-        animationHandleMap[next]?.start(joints);
         setIsTracing(false);
+        animationHandleMap[next]?.start(joints);
         break;
       default:
     }

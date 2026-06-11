@@ -40,7 +40,7 @@ const Home = () => {
     },
     {
       id: Date.now() + Math.random(),
-      x: 0.2,
+      x: 0.15,
       y: 0.3,
       z: 0.25,
       roll: 0,
@@ -49,7 +49,7 @@ const Home = () => {
     },
     {
       id: Date.now() + Math.random(),
-      x: -0.2,
+      x: -0.15,
       y: 0.3,
       z: 0.25,
       roll: 0,
