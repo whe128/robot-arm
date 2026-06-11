@@ -67,7 +67,7 @@ const RobotViewer = forwardRef(({ joints, isTracing }, ref) => {
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
       // camera target look
-      controls.target.set(0, 0.5, 0);
+      controls.target.set(0, 0.8, 0.3);
       controls.update();
 
       // ── trace ────────────────────────────────────────────────────────────
