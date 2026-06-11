@@ -305,7 +305,7 @@ const moveCircle = (onUpdate, onTrace, duration = 1800, radius = 0.08) => {
     let middleTargetPosition;
 
     if (drawBigCircle) {
-      // 大圆，和原来一样
+      //
       const dy = radius + radius * -Math.cos(t * 2 * Math.PI);
       middleTargetPosition = {
         x: startPose.x + radius * -Math.sin(t * 2 * Math.PI),
@@ -317,12 +317,20 @@ const moveCircle = (onUpdate, onTrace, duration = 1800, radius = 0.08) => {
       const r = radius / 2;
       const localT = t < 0.5 ? t * 2 : (t - 0.5) * 2;
       let dx, dy;
-      if (t < 0.5) {
+
+      if (t < 0.25) {
+        // √
         dx = r * -Math.sin(localT * 2 * Math.PI);
-        dy = r - r * Math.cos(localT * 2 * Math.PI); // t=0: dy=0 ✓
+        dy = r - r * Math.cos(localT * 2 * Math.PI);
+      } else if (t < 0.5) {
+        dx = r * -Math.sin(localT * 2 * Math.PI);
+        dy = 3 * r + r * Math.cos(localT * 2 * Math.PI);
+      } else if (t < 0.75) {
+        dx = r * -Math.sin(localT * 2 * Math.PI);
+        dy = 3 * r + r * Math.cos(localT * 2 * Math.PI);
       } else {
-        dx = r * Math.sin(localT * 2 * Math.PI);
-        dy = -(r - r * Math.cos(localT * 2 * Math.PI)); // t=0: dy=0 ✓
+        dx = r * -Math.sin(localT * 2 * Math.PI);
+        dy = r - r * Math.cos(localT * 2 * Math.PI);
       }
 
       middleTargetPosition = {
