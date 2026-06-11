@@ -150,8 +150,6 @@ const RobotControl = ({
         setIsTracing(false);
         break;
       default:
-        // animationHandleMap[next]?.start(joints);
-        // setIsTracing(false);
     }
   };
 

@@ -211,8 +211,6 @@ const Home = () => {
                 setShowSequence={setShowSequence}
                 isLoop={isLoop}
                 setIsLoop={setIsLoop}
-                setIsTracing={setIsTracing}
-                handleClearTrace={handleClearTrace}
               />
             </div>
           )}
@@ -230,6 +228,8 @@ const Home = () => {
             isLoop={isLoop}
             setIsLoop={setIsLoop}
             showMobilePanel={showMobilePanel}
+            setIsTracing={setIsTracing}
+            handleClearTrace={handleClearTrace}
           />
         </div>
       </div>

@@ -116,7 +116,7 @@ const RobotControlMobile = ({
     sweep:    moveSweep(onJointChangeWhole),
     dance:    moveDance(onJointChangeWhole),
     sequence: moveSequence(onJointChangeWhole, onStop, setIsTracing),
-    circle: moveCircle(onJointChangeWhole, setIsTracing),
+    circle:   moveCircle(onJointChangeWhole, setIsTracing),
   }).current;
 
   const handleAnim = (mode, sameModeContinue = false) => {
@@ -154,8 +154,6 @@ const RobotControlMobile = ({
         setIsTracing(false);
         break;
       default:
-        // animationHandleMap[next]?.start(joints);
-        // setIsTracing(false);
     }
   };
 
@@ -164,6 +162,7 @@ const RobotControlMobile = ({
   const handleManualMoveStart = (moveField, isAdd) => {
     handleManualMove.start(joints, moveField, isAdd);
     setActiveAnim("manual");
+    setIsTracing(true);
   }
 
   const handleManualMoveStop = () => {
