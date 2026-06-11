@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Robot Arm
+
+A Next.js web application for visualizing and controlling 3D robot arm models. Built with React, Three.js, and URDF loader for realistic robot model rendering.
+
+## Features
+
+- **3D Visualization**: Interactive 3D robot arm visualization using Three.js
+- **URDF Support**: Load and render robot models from URDF (Unified Robot Description Format) files
+- **Modern Web Stack**: Built with Next.js 16, React 19, and Tailwind CSS
+- **Responsive Design**: Works seamlessly across different screen sizes
+
+## Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org) 16.2.7
+- **UI Library**: [React](https://react.dev) 19.2.4
+- **3D Graphics**: [Three.js](https://threejs.org) 0.184.0
+- **Robot Format**: [URDF Loader](https://www.npmjs.com/package/urdf-loader) 0.12.7
+- **Styling**: [Tailwind CSS](https://tailwindcss.com) 4
+- **Bundler**: [Node](https://nodejs.org/)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+### Running the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+The page will auto-update as you edit files. Hot module replacement is enabled for fast development.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Available Scripts
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build the application for production
+- `npm start` - Start the production server
+
+## Project Structure
+
+```
+robot-arm/
+├── src/           # Source code
+├── public/        # Static assets
+├── app/           # Next.js app directory
+├── package.json   # Project dependencies
+└── README.md      # This file
+```
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Three.js Documentation](https://threejs.org/docs/)
+- [URDF Format](http://wiki.ros.org/urdf/XML)
+- [Tailwind CSS](https://tailwindcss.com/docs)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Contributions are welcome! Feel free to submit issues and pull requests.
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is open source and available under the MIT License.
