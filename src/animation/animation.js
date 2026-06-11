@@ -267,7 +267,7 @@ const moveCircle = (onUpdate, onTrace, duration = 1800, radius = 0.08) => {
   let hasResetOrigin = false;
   let startAngles = [];
 
-  let drawBigCircle = true;
+  let drawBigCircle = false; // control to draw big circle or two small circles, start with two small circles
 
   const tick = (now) => {
     if (stopped) return;

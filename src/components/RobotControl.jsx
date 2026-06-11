@@ -96,6 +96,7 @@ const RobotControl = ({
   const handleJ = (index, v) => {
     const deg = parseFloat(v);
     onJointChangeSingle?.(index, degToRad(deg));
+    setIsTracing(true)
   };
 
   const handleTargetChange = (axis, value) => {
