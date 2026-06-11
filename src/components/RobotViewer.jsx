@@ -1,13 +1,25 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import URDFLoader from "urdf-loader";
 
-const RobotViewer = ({ joints }) => {
+
+const MAX_TRAIL_POINTS = 1000;
+
+const RobotViewer = forwardRef(({ joints, isTracing }, ref) => {
   const mountRef = useRef(null);
   const robotRef = useRef(null);
+  const trailRef = useRef(null);   // THREE.Line object
+  const trailPtsRef  = useRef([]);     // Vector3[]
+
+  const clearTrail = () => {
+    trailPtsRef.current = [];
+    const line = trailRef.current;
+    if (line) line.geometry.setDrawRange(0, 0);
+  };
+  useImperativeHandle(ref, () => ({clearTrail}));
 
   useEffect(() => {
       const mount = mountRef.current;
@@ -57,6 +69,20 @@ const RobotViewer = ({ joints }) => {
       // camera target look
       controls.target.set(0, 0.5, 0);
       controls.update();
+
+      // ── trace ────────────────────────────────────────────────────────────
+      const trailGeo = new THREE.BufferGeometry();
+      const positions = new Float32Array(MAX_TRAIL_POINTS * 3);
+      trailGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      trailGeo.setDrawRange(0, 0);
+      const trailMat = new THREE.LineBasicMaterial({
+          color: 0x00e5ff,
+          linewidth: 2,
+          vertexColors: false,
+      });
+      const trailLine = new THREE.Line(trailGeo, trailMat);
+      scene.add(trailLine);
+      trailRef.current = trailLine;
 
       // ── URDF Loader ────────────────────────────────────────────────────────
       const loader = new URDFLoader();
@@ -171,9 +197,48 @@ const RobotViewer = ({ joints }) => {
     robot.joints["joint4"]?.setJointValue(joints[3]);
     robot.joints["joint5"]?.setJointValue(joints[4]);
     robot.joints["joint6"]?.setJointValue(joints[5]);
-    }, [joints]);
+
+
+    if (!isTracing) {
+      if (trailPtsRef.current.length > 0) {
+        clearTrail();
+      }
+      return
+    };
+
+    // read end-effector position and update the trail
+    const eeLink = robot.getObjectByName("joint6");
+
+    // read world position of the end-effector link
+    if (!eeLink || !trailRef.current) return;
+
+    const worldPos = new THREE.Vector3();
+    const worldQuat = new THREE.Quaternion();
+
+    eeLink.getWorldPosition(worldPos);
+    eeLink.getWorldQuaternion(worldQuat);
+
+    const forward = new THREE.Vector3(0, 0, 0.056);
+    forward.applyQuaternion(worldQuat);        // rotate
+
+    // add current position to trail points, maintain a fixed length (in-place update)
+    const pts = trailPtsRef.current;
+    const tcpPos = worldPos.clone().add(forward);
+    pts.push(tcpPos);
+    if (pts.length > MAX_TRAIL_POINTS) pts.shift();
+
+    // update trail geometry with new points
+    const line = trailRef.current;
+    const posAttr = line.geometry.attributes.position;
+    pts.forEach((p, i) => {
+      posAttr.setXYZ(i, p.x, p.y, p.z);
+    });
+    posAttr.needsUpdate = true;
+    line.geometry.setDrawRange(0, pts.length);
+
+    }, [joints, isTracing]);
 
     return <div ref = {mountRef} className="w-full h-full" />;
-}
+});
 
 export default RobotViewer;

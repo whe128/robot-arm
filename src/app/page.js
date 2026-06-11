@@ -4,7 +4,7 @@ import RobotViewer from "@/components/RobotViewer";
 import RobotControl from "@/components/RobotControl";
 import RobotControlMobile from "@/components/RobotControlMobile";
 import { SequencePanel } from "@/components/SequencePanel";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const Home = () => {
   // rad
@@ -151,6 +151,13 @@ const Home = () => {
   const [isLoop, setIsLoop] = useState(true);
   const [showSequence, setShowSequence] = useState(false);
   const [showMobilePanel, setShowMobilePanel] = useState(true);
+  const [isTracing, setIsTracing] = useState(false);
+
+  const viewerRef = useRef();
+
+  const handleClearTrace = () => {
+    viewerRef.current?.clearTrail();
+  };
 
   // rad
   const handleJointChangeSingle = (joint_index, value) => {
@@ -180,7 +187,7 @@ const Home = () => {
       </div>
 
       <div className="flex-1 relative w-full h-full">
-        <RobotViewer joints={joints} />
+        <RobotViewer ref={viewerRef} joints={joints} isTracing={isTracing} />
 
         <div className="hidden sm:block">
           <div className="absolute bottom-12 left-4 z-10 max-h-[calc(100vh-80px)] overflow-y-auto pointer-events-auto">
@@ -192,6 +199,8 @@ const Home = () => {
               setShowSequence={setShowSequence}
               sequenceList={sequenceList}
               isLoop={isLoop}
+              setIsTracing={setIsTracing}
+              handleClearTrace={handleClearTrace}
             />
           </div>
           {showSequence && (
@@ -202,6 +211,8 @@ const Home = () => {
                 setShowSequence={setShowSequence}
                 isLoop={isLoop}
                 setIsLoop={setIsLoop}
+                setIsTracing={setIsTracing}
+                handleClearTrace={handleClearTrace}
               />
             </div>
           )}

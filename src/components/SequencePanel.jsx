@@ -133,6 +133,7 @@ const SequencePanel = ({
               <input
                 key={`${seq.id}-${field}`}
                 type="number"
+                step={`${["roll", "yaw", "pitch"].includes(adjustAxis) ? "1" : "0.1"}`}
                 value={seq[adjustAxis]}
                 onChange={(e) =>
                   updateSequence(
@@ -266,6 +267,7 @@ const SequencePanelMobile = ({
               <input
                 key={`${seq.id}-${field}`}
                 type="number"
+                step={`${["roll", "yaw", "pitch"].includes(adjustAxis) ? "1" : "0.1"}`}
                 value={seq[adjustAxis]}
                 onChange={(e) =>
                   updateSequence(

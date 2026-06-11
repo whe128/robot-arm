@@ -72,11 +72,14 @@ const RobotControl = ({
   setShowSequence,
   sequenceList,
   isLoop,
+  setIsTracing,
+  handleClearTrace
 }) => {
 
   // degree state for sliders
 
   const [activeAnim, setActiveAnim] = useState(null);
+  const lastActiveAnim = useRef(null);
   const isAnimating = activeAnim !== null;
 
   // true position of target in world coordinate, not the show position of input box
@@ -108,8 +111,8 @@ const RobotControl = ({
     wave: moveWave(onJointChangeWhole),
     sweep: moveSweep(onJointChangeWhole),
     dance: moveDance(onJointChangeWhole),
-    sequence: moveSequence(onJointChangeWhole, onStop),
-    circle: moveCircle(onJointChangeWhole),
+    sequence: moveSequence(onJointChangeWhole, onStop, setIsTracing),
+    circle: moveCircle(onJointChangeWhole, setIsTracing),
   }).current;
 
   const handleAnim = (mode, sameModeContinue = false) => {
@@ -122,13 +125,33 @@ const RobotControl = ({
     // set new active mode
     setActiveAnim(next);
 
-    // start new mode
-    if (next === "target"){
-      animationHandleMap[next]?.start(joints, target);
-    } else if (next === "sequence") {
-      animationHandleMap[next]?.start(joints, sequenceList, isLoop);
-    } else {
-      animationHandleMap[next]?.start(joints);
+    if (next) {
+      if (lastActiveAnim.current && lastActiveAnim.current !== next) {
+        handleClearTrace();
+      }
+      lastActiveAnim.current = next;
+    }
+
+    switch (next) {
+      case "target":
+        animationHandleMap[next]?.start(joints, target);
+        setIsTracing(true);
+        break;
+      case "sequence":
+        animationHandleMap[next]?.start(joints, sequenceList, isLoop);
+        setIsTracing(false);
+        break;
+      case "circle":
+        animationHandleMap[next]?.start(joints);
+        setIsTracing(false);
+        break;
+      case "origin":
+        animationHandleMap[next]?.start(joints);
+        setIsTracing(false);
+        break;
+      default:
+        // animationHandleMap[next]?.start(joints);
+        // setIsTracing(false);
     }
   };
 
@@ -137,6 +160,7 @@ const RobotControl = ({
   const handleManualMoveStart = (moveField, isAdd) => {
     handleManualMove.start(joints, moveField, isAdd);
     setActiveAnim("manual");
+    setIsTracing(true);
   }
 
   const handleManualMoveStop = () => {
@@ -282,6 +306,7 @@ const RobotControl = ({
                     <span className="text-slate-400 text-xs">{axis}</span>
                     <input
                       type="number"
+                      step="0.1"
                       value={target[adjustAxis]}
                       onChange={(e) => handleTargetChange(adjustAxis, parseFloat(e.target.value) || 0)}
                       onKeyDown={(e) => {
@@ -303,6 +328,7 @@ const RobotControl = ({
                   <span className="w-13 text-slate-400 text-xs">{axis}</span>
                   <input
                     type="number"
+                    step="1"
                     value={target[adjustAxis]}
                     onChange={(e) => handleTargetChange(adjustAxis, parseFloat(e.target.value || 0))}
                     onKeyDown={(e) => {

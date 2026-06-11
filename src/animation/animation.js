@@ -257,7 +257,7 @@ const moveToTarget = (onUpdate, onStop, duration = 2000) => {
   return { start, stop };
 };
 
-const moveCircle = (onUpdate, duration = 1800, radius = 0.08) => {
+const moveCircle = (onUpdate, onTrance, duration = 1800, radius = 0.08) => {
   const startCicrcleJoints = [0, -0.258309, 1.403419, 0, -1.145111, 0];
   let stopped = true;
   let startTime = 0;
@@ -288,6 +288,7 @@ const moveCircle = (onUpdate, duration = 1800, radius = 0.08) => {
         startPose = endEffectorPose(newJoints);
         startQuat = getQuaternionFromEular(startPose);
         currentJoints = newJoints;
+        onTrance(true);
       }
 
       requestAnimationFrame(tick);
@@ -295,7 +296,6 @@ const moveCircle = (onUpdate, duration = 1800, radius = 0.08) => {
     }
 
     const t = Math.min((now - startTime) / duration, 1);
-    const ease = 1 - Math.pow(1 - t, 1.5);
 
     const middleTargetPosition = {
       x: startPose.x + radius * -Math.sin(t * 2 * Math.PI),
@@ -326,12 +326,14 @@ const moveCircle = (onUpdate, duration = 1800, radius = 0.08) => {
     if (
       joints.every((angle) => {
         const originAngle = startCicrcleJoints[joints.indexOf(angle)];
-        return Math.abs(angle - originAngle) < 0.001;
+        return Math.abs(angle - originAngle) < 0.0001;
       })
     ) {
       hasResetOrigin = true;
+      onTrance(true);
     } else {
       hasResetOrigin = false;
+      onTrance(false);
     }
 
     startPose = endEffectorPose(joints);
@@ -351,7 +353,7 @@ const moveCircle = (onUpdate, duration = 1800, radius = 0.08) => {
   return { start, stop };
 };
 
-const moveSequence = (onUpdate, onStop, duration = 800) => {
+const moveSequence = (onUpdate, onStop, onTrace, duration = 800) => {
   let sequenceList = null;
   let isLoop = false;
   let currentJoints = [];
@@ -387,6 +389,7 @@ const moveSequence = (onUpdate, onStop, duration = 800) => {
         startPose = endEffectorPose(newJoints);
         startQuat = getQuaternionFromEular(startPose);
         currentJoints = newJoints;
+        onTrace(true);
       }
 
       requestAnimationFrame(tick);
@@ -413,9 +416,9 @@ const moveSequence = (onUpdate, onStop, duration = 800) => {
       startQuat.z * targetQuat.z;
 
     const posClose =
-      Math.abs(targetPose.x - startPose.x) < 0.001 &&
-      Math.abs(targetPose.y - startPose.y) < 0.001 &&
-      Math.abs(targetPose.z - startPose.z) < 0.001;
+      Math.abs(targetPose.x - startPose.x) < 0.0001 &&
+      Math.abs(targetPose.y - startPose.y) < 0.0001 &&
+      Math.abs(targetPose.z - startPose.z) < 0.0001;
 
     const closeEnough = posClose && Math.abs(cosHalfTheta) > 0.99999;
 
@@ -464,12 +467,14 @@ const moveSequence = (onUpdate, onStop, duration = 800) => {
     if (
       joints.every((angle) => {
         const originAngle = originalJoints[joints.indexOf(angle)];
-        return Math.abs(angle - originAngle) < 0.001;
+        return Math.abs(angle - originAngle) < 0.0001;
       })
     ) {
       hasResetOrigin = true;
+      onTrace(true);
     } else {
       hasResetOrigin = false;
+      onTrace(false);
     }
 
     sequenceList = sequenceListInput;
@@ -559,12 +564,12 @@ const moveManual = (onUpdate, speedPos = 0.15, speedRad = 1.3) => {
 };
 
 export {
-  moveToOrigin,
-  moveWave,
-  moveSweep,
-  moveDance,
-  moveToTarget,
-  moveCircle,
-  moveSequence,
-  moveManual,
+  moveToOrigin, // all trace
+  moveWave, // all trace
+  moveSweep, // all trace
+  moveDance, // all trace
+  moveToTarget, // all trace
+  moveCircle, // first move start - notrace, circle trace
+  moveSequence, // first move start - notrace, sequence trace
+  moveManual, // all trace
 };

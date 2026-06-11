@@ -79,10 +79,13 @@ const RobotControlMobile = ({
   setSequenceList,
   isLoop,
   setIsLoop,
-  showMobilePanel
+  showMobilePanel,
+  setIsTracing,
+  handleClearTrace
 }) => {
   const [activeTab, setActiveTab]   = useState("joints");
   const [activeAnim, setActiveAnim] = useState(null);
+  const lastActiveAnim = useRef(null);
   const isAnimating = activeAnim !== null;
 
   // true position of target in world coordinate, not the show position of input box
@@ -112,8 +115,8 @@ const RobotControlMobile = ({
     wave:     moveWave(onJointChangeWhole),
     sweep:    moveSweep(onJointChangeWhole),
     dance:    moveDance(onJointChangeWhole),
-    sequence: moveSequence(onJointChangeWhole, onStop),
-    circle:   moveCircle(onJointChangeWhole),
+    sequence: moveSequence(onJointChangeWhole, onStop, setIsTracing),
+    circle: moveCircle(onJointChangeWhole, setIsTracing),
   }).current;
 
   const handleAnim = (mode, sameModeContinue = false) => {
@@ -126,13 +129,33 @@ const RobotControlMobile = ({
     // set new active mode
     setActiveAnim(next);
 
-    // start new mode
-    if (next === "target"){
-      animationHandleMap[next]?.start(joints, target);
-    } else if (next === "sequence") {
-      animationHandleMap[next]?.start(joints, sequenceList, isLoop);
-    } else {
-      animationHandleMap[next]?.start(joints);
+    if (next) {
+      if (lastActiveAnim.current && lastActiveAnim.current !== next) {
+        handleClearTrace();
+      }
+      lastActiveAnim.current = next;
+    }
+
+    switch (next) {
+      case "target":
+        animationHandleMap[next]?.start(joints, target);
+        setIsTracing(true);
+        break;
+      case "sequence":
+        animationHandleMap[next]?.start(joints, sequenceList, isLoop);
+        setIsTracing(false);
+        break;
+      case "circle":
+        animationHandleMap[next]?.start(joints);
+        setIsTracing(false);
+        break;
+      case "origin":
+        animationHandleMap[next]?.start(joints);
+        setIsTracing(false);
+        break;
+      default:
+        // animationHandleMap[next]?.start(joints);
+        // setIsTracing(false);
     }
   };
 
@@ -282,6 +305,7 @@ const RobotControlMobile = ({
 
               <input
                 type="number"
+                step={unit === "°" ? "1" : "0.01"}
                 value={target[field]}
                 onChange={(e) => handleTargetChange(field, parseFloat(e.target.value) || 0)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleAnim("target", true); }}
