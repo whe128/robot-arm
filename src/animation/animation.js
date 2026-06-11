@@ -300,7 +300,6 @@ const moveCircle = (onUpdate, onTrace, duration = 1800, radius = 0.08) => {
     const t = Math.min((now - startTime) / duration, 1);
 
     const angle = -Math.PI / 4; // circle plane angle, fixed to 45 degree for better visual effect, can be changed to other angle or even animation
-    const dy = radius + radius * -Math.cos(t * 2 * Math.PI);
 
     let middleTargetPosition;
 
