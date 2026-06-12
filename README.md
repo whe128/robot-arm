@@ -3,6 +3,9 @@ A Next.js web application for visualizing and controlling 3D robot arm models. B
 
 <p align="center">
   <img width="400" height="711" alt="ezgif-71c572fce7626dd4" src="https://github.com/user-attachments/assets/ab14b72c-fc79-4b07-80dc-d2a9badd5243" />
+  
+  <br>
+  <a href="https://www.youtube.com/watch?v=ZiVyR5cvqI0">[video]</a>
 </p>
 
 ## Features
